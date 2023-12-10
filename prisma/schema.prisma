@@ -1,5 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// если надо стянуть существующие таблицы из бд то надо запустить команду
+// !!! ВАЖНО
+// прежде чем юзать команду надо посмотреть в package.json
+// какой путь к переменным окружения указан в команде
+// yarn prisma_db_pull
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +11,10 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model playing_with_neon {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value Float? @db.Real
 }
