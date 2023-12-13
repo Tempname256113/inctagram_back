@@ -5,10 +5,15 @@ import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(SecondAppModule);
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('generalConfig.secondAppPort');
+
+  const port = configService.get<number>('APP_CONFIG.SECOND_APP_PORT');
+
   await app.listen(port);
-  console.log('second app started on port 3000');
+
+  console.log(`second app started on port ${port}`);
 }
 bootstrap();
