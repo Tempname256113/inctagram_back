@@ -6,6 +6,7 @@ import { BcryptService } from '../../../utils/bcrypt.service';
 import { NodemailerService } from '../../../utils/nodemailer.service';
 import { add } from 'date-fns';
 import * as crypto from 'crypto';
+import { ConflictException } from '@nestjs/common';
 
 export class RegistrationCommand implements ICommand {
   constructor(public readonly userRegistrationDTO: UserRegistrationDTO) {}
@@ -21,13 +22,22 @@ export class RegistrationHandler
     private readonly nodemailerSerivce: NodemailerService,
   ) {}
 
-  async execute(command: RegistrationCommand): Promise<void> {}
+  async execute(command: RegistrationCommand): Promise<void> {
+    const {
+      userRegistrationDTO: { password, email, username },
+    } = command;
 
+    // регистрируется новый юзер
+    await this.registerNewUser({ email, username, password });
+  }
+
+  // возвращает true если не нужно регистрировать нового юзера
+  // и false если новый юзер нужен
   async checkUsernameAndEmail(data: {
     username: string;
     email: string;
     password: string;
-  }): Promise<void> {
+  }): Promise<boolean> {
     const { username, email, password } = data;
 
     const foundedUser: User | null = await this.prisma.user.findFirst({
@@ -65,6 +75,10 @@ export class RegistrationHandler
             email,
             confirmationCode: registrationConfirmCode,
           });
+
+          // нужно что то вернуть из функции чтобы было понятно что юзера регистрировать не надо
+          return true;
+
           //   если username && email верные, не подтвержденный с почты аккаунт и неверный пароль
           //   то нужно поставить новый пароль и отправить сообщение про подтверждение регистрации
         } else if (!userPasswordIsCorrect) {
@@ -72,7 +86,7 @@ export class RegistrationHandler
 
           // обновляется пароль юзера, код для подтверждения регистрации и время на подтверждение
           await this.prisma.user.update({
-            where: { email },
+            where: { email, username },
             data: {
               password: await this.bcryptService.encryptPassword(password),
               userAdditionalInfo: {
@@ -88,8 +102,63 @@ export class RegistrationHandler
             email,
             confirmationCode: registrationConfirmCode,
           });
+
+          // нужно что то вернуть из функции чтобы было понятно что юзера регистрировать не надо
+          return true;
         }
       }
+    }
+
+    //   тут остальные кейсы
+
+    // если уже есть юзер в системе с таким же email
+    if (foundedUser.email === email) {
+      throw new ConflictException('User with this email is already registered');
+      //   если уже есть юзер в системе с таким же username
+    } else if (foundedUser.username === username) {
+      throw new ConflictException(
+        'User with this username is already registered',
+      );
+    }
+
+    return false;
+  }
+
+  async registerNewUser(userRegisterDTO: UserRegistrationDTO): Promise<void> {
+    const { username, email, password } = userRegisterDTO;
+
+    // нужно создавать нового юзера или нет
+    // возвращается false если нужно и true если не нужно
+    const createNewUserOrNot: boolean = !(await this.checkUsernameAndEmail({
+      email,
+      username,
+      password,
+    }));
+
+    if (createNewUserOrNot) {
+      const registrationConfirmCode: string = crypto.randomUUID();
+
+      // создается новый юзер
+      await this.prisma.user.create({
+        data: {
+          email,
+          username,
+          password: await this.bcryptService.encryptPassword(password),
+          userAdditionalInfo: {
+            create: {
+              registrationConfirmCode,
+              registrationCodeEndDate: add(new Date(), { days: 3 }),
+              emailIsConfirmed: false,
+            },
+          },
+        },
+      });
+
+      // новому юзеру отправляется код для подтверждения регистрации
+      this.nodemailerSerivce.sendRegistrationConfirmEmail({
+        email,
+        confirmationCode: registrationConfirmCode,
+      });
     }
   }
 }
