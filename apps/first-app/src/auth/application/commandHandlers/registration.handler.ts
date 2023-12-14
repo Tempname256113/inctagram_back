@@ -19,7 +19,7 @@ export class RegistrationHandler
   constructor(
     private readonly prisma: PrismaService,
     private readonly bcryptService: BcryptService,
-    private readonly nodemailerSerivce: NodemailerService,
+    private readonly nodemailerService: NodemailerService,
   ) {}
 
   async execute(command: RegistrationCommand): Promise<void> {
@@ -71,7 +71,7 @@ export class RegistrationHandler
           });
 
           // ждать не надо пока письмо придет
-          this.nodemailerSerivce.sendRegistrationConfirmEmail({
+          this.nodemailerService.sendRegistrationConfirmEmail({
             email,
             confirmationCode: registrationConfirmCode,
           });
@@ -98,7 +98,7 @@ export class RegistrationHandler
             },
           });
 
-          this.nodemailerSerivce.sendRegistrationConfirmEmail({
+          this.nodemailerService.sendRegistrationConfirmEmail({
             email,
             confirmationCode: registrationConfirmCode,
           });
@@ -155,7 +155,7 @@ export class RegistrationHandler
       });
 
       // новому юзеру отправляется код для подтверждения регистрации
-      this.nodemailerSerivce.sendRegistrationConfirmEmail({
+      this.nodemailerService.sendRegistrationConfirmEmail({
         email,
         confirmationCode: registrationConfirmCode,
       });
