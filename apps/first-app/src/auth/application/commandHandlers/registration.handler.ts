@@ -70,28 +70,6 @@ export class RegistrationHandler
           });
 
           return true;
-        } else if (!userPasswordIsCorrect) {
-          const registrationConfirmCode: string = crypto.randomUUID();
-
-          await this.prisma.user.update({
-            where: { email, username },
-            data: {
-              password: await this.bcryptService.encryptPassword(password),
-              userAdditionalInfo: {
-                update: {
-                  registrationConfirmCode,
-                  registrationCodeEndDate: add(new Date(), { days: 3 }),
-                },
-              },
-            },
-          });
-
-          this.nodemailerService.sendRegistrationConfirmEmail({
-            email,
-            confirmationCode: registrationConfirmCode,
-          });
-
-          return true;
         }
       }
     }
@@ -118,28 +96,30 @@ export class RegistrationHandler
       password,
     }));
 
-    if (createNewUserOrNot) {
-      const registrationConfirmCode: string = crypto.randomUUID();
+    if (!createNewUserOrNot) {
+      return;
+    }
 
-      await this.prisma.user.create({
-        data: {
-          email,
-          username,
-          password: await this.bcryptService.encryptPassword(password),
-          userAdditionalInfo: {
-            create: {
-              registrationConfirmCode,
-              registrationCodeEndDate: add(new Date(), { days: 3 }),
-              emailIsConfirmed: false,
-            },
+    const registrationConfirmCode: string = crypto.randomUUID();
+
+    await this.prisma.user.create({
+      data: {
+        email,
+        username,
+        password: await this.bcryptService.encryptPassword(password),
+        userAdditionalInfo: {
+          create: {
+            registrationConfirmCode,
+            registrationCodeEndDate: add(new Date(), { days: 3 }),
+            emailIsConfirmed: false,
           },
         },
-      });
+      },
+    });
 
-      this.nodemailerService.sendRegistrationConfirmEmail({
-        email,
-        confirmationCode: registrationConfirmCode,
-      });
-    }
+    this.nodemailerService.sendRegistrationConfirmEmail({
+      email,
+      confirmationCode: registrationConfirmCode,
+    });
   }
 }
