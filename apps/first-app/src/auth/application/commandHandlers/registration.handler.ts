@@ -46,8 +46,6 @@ export class RegistrationHandler
     });
 
     if (foundedUser?.username === username && foundedUser?.email === email) {
-      // если у юзера не подтвержден email значит ему надо выслать код
-      // если нет то ничего высылать не надо
       if (!foundedUser.userAdditionalInfo.emailIsConfirmed) {
         const userPasswordIsCorrect: boolean =
           await this.bcryptService.compareHashAndPassword({
@@ -55,13 +53,9 @@ export class RegistrationHandler
             hash: foundedUser.password,
           });
 
-        // если username && email совпадают нужно проверить пароль
-        // если пароль верный то юзер хочет получить новое письмо чтобы подтвердить почту
-        // возможно у старого кода в письме кончилось время действия или юзер удалил
         if (userPasswordIsCorrect) {
           const registrationConfirmCode: string = crypto.randomUUID();
 
-          // надо обновить запись в бд по этому юзеру
           await this.prisma.userAdditionalInfo.update({
             where: { userId: foundedUser.id },
             data: {
@@ -70,21 +64,15 @@ export class RegistrationHandler
             },
           });
 
-          // ждать не надо пока письмо придет
           this.nodemailerService.sendRegistrationConfirmEmail({
             email,
             confirmationCode: registrationConfirmCode,
           });
 
-          // нужно что то вернуть из функции чтобы было понятно что юзера регистрировать не надо
           return true;
-
-          //   если username && email верные, не подтвержденный с почты аккаунт и неверный пароль
-          //   то нужно поставить новый пароль и отправить сообщение про подтверждение регистрации
         } else if (!userPasswordIsCorrect) {
           const registrationConfirmCode: string = crypto.randomUUID();
 
-          // обновляется пароль юзера, код для подтверждения регистрации и время на подтверждение
           await this.prisma.user.update({
             where: { email, username },
             data: {
@@ -103,18 +91,13 @@ export class RegistrationHandler
             confirmationCode: registrationConfirmCode,
           });
 
-          // нужно что то вернуть из функции чтобы было понятно что юзера регистрировать не надо
           return true;
         }
       }
     }
 
-    //   тут остальные кейсы
-
-    // если уже есть юзер в системе с таким же email
     if (foundedUser.email === email) {
       throw new ConflictException('User with this email is already registered');
-      //   если уже есть юзер в системе с таким же username
     } else if (foundedUser.username === username) {
       throw new ConflictException(
         'User with this username is already registered',
@@ -138,7 +121,6 @@ export class RegistrationHandler
     if (createNewUserOrNot) {
       const registrationConfirmCode: string = crypto.randomUUID();
 
-      // создается новый юзер
       await this.prisma.user.create({
         data: {
           email,
@@ -154,7 +136,6 @@ export class RegistrationHandler
         },
       });
 
-      // новому юзеру отправляется код для подтверждения регистрации
       this.nodemailerService.sendRegistrationConfirmEmail({
         email,
         confirmationCode: registrationConfirmCode,

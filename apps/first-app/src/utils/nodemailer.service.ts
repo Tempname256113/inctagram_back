@@ -6,10 +6,12 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 @Injectable()
 export class NodemailerService {
   private readonly transporter: Transporter<SMTPTransport.SentMessageInfo>;
-  private readonly email_user: string;
+  private readonly nodemailerEmailUser: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.email_user = this.configService.get<string>('APP_CONFIG.EMAIL_USER');
+    this.nodemailerEmailUser = this.configService.get<string>(
+      'APP_CONFIG.EMAIL_USER',
+    );
 
     this.transporter = createTransport({
       service: 'gmail',
@@ -17,7 +19,7 @@ export class NodemailerService {
       port: 587,
       secure: false,
       auth: {
-        user: this.email_user,
+        user: this.nodemailerEmailUser,
         pass: this.configService.get<string>('APP_CONFIG.EMAIL_PASS'),
       },
     });
@@ -31,7 +33,7 @@ export class NodemailerService {
 
     try {
       await this.transporter.sendMail({
-        from: this.email_user,
+        from: this.nodemailerEmailUser,
         to: email,
         subject: 'Confirm your registration please',
         html: `To confirm your registration follow link: <a href='http://localhost:3021/auth/registration/confirm/${confirmationCode}'>confirm registration</a>`,
