@@ -1,5 +1,15 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// если надо стянуть существующие таблицы из бд то надо запустить команду
+// !!! ВАЖНО
+// прежде чем юзать команду надо посмотреть в package.json
+// какой путь к переменным окружения указан в команде
+// yarn prisma_db_pull
+
+// в локальном окружении можно использовать prisma db push
+// чтобы внести новые модели в базу данных без создания миграций
+
+// после того как новые изменения находятся в базе данных нужно обновить клиент prisma
+// чтобы использовать новые изменения prisma в программе
+// prisma generate
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +18,31 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model playing_with_neon {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value Float? @db.Real
+}
+
+model User {
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique
+  username           String              @unique
+  password           String
+  userAdditionalInfo UserAdditionalInfo?
+
+  @@map("users")
+}
+
+model UserAdditionalInfo {
+  userId                  Int      @id
+  emailIsConfirmed        Boolean  @default(false)
+  registrationConfirmCode String
+  // registrationCodeEndDate это дата после которой код для подтверждения регистрации будет уже не актуален
+  registrationCodeEndDate DateTime
+  user                    User     @relation(fields: [userId], references: [id])
+
+  @@map("user_additional_info")
 }
