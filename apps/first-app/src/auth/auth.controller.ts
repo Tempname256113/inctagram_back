@@ -39,7 +39,6 @@ export class AuthController {
     @Body() userLoginDTO: UserLoginDTO,
     @Response({ passthrough: true }) res,
   ): Promise<{ accessToken: string }> {
-    console.log(userLoginDTO);
     const userId: number | null = await this.commandBus.execute<
       LoginCommand,
       number | null
