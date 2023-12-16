@@ -1,4 +1,5 @@
 import { IsEmail, IsString, Length, Matches } from 'class-validator';
+import { ErrorsMessagesEnum } from '../variables/validationErrors.messages';
 
 export class UserRegistrationDTO {
   @IsString({ message: 'Username must be a string' })
@@ -23,5 +24,22 @@ export class UserRegistrationDTO {
     },
   )
   @Length(6, 20, { message: 'Password must contains 6 - 20 length' })
+  password: string;
+}
+
+export class UserLoginDTO {
+  @IsEmail({}, { message: ErrorsMessagesEnum.EMAIL_OR_PASSWORD_INCORRECT })
+  email: string;
+
+  @IsString()
+  @Matches(
+    /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*()_+|~\-=`{}[\]:;"'<>,.?/]).{6,}$/,
+    {
+      message: ErrorsMessagesEnum.EMAIL_OR_PASSWORD_INCORRECT,
+    },
+  )
+  @Length(6, 20, {
+    message: ErrorsMessagesEnum.EMAIL_OR_PASSWORD_INCORRECT,
+  })
   password: string;
 }
