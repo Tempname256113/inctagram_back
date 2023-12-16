@@ -25,3 +25,23 @@ export class UserRegistrationDTO {
   @Length(6, 20, { message: 'Password must contains 6 - 20 length' })
   password: string;
 }
+
+export class UserLoginDTO {
+  @IsEmail(
+    {},
+    { message: 'The email or password are incorrect. Try again please' },
+  )
+  email: string;
+
+  @IsString()
+  @Matches(
+    /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*()_+|~\-=`{}[\]:;"'<>,.?/]).{6,}$/,
+    {
+      message: 'The email or password are incorrect. Try again please',
+    },
+  )
+  @Length(6, 20, {
+    message: 'The email or password are incorrect. Try again please',
+  })
+  password: string;
+}

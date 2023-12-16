@@ -5,4 +5,6 @@ export default registerAs('APP_CONFIG', () => ({
   SECOND_APP_PORT: parseInt(process.env.PORT) || 3022,
   EMAIL_USER: process.env.EMAIL_USER,
   EMAIL_PASS: process.env.EMAIL_PASS,
+  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
 }));
