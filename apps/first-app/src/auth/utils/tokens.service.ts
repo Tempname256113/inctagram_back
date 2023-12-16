@@ -64,9 +64,14 @@ export class TokensService {
   async createTokensPair(
     userId: number,
   ): Promise<{ accessToken: string; refreshToken: string }> {
+    const tokensPair: string[] = await Promise.all([
+      this.createAccessToken(userId),
+      this.createRefreshToken(userId),
+    ]);
+
     return {
-      accessToken: await this.createAccessToken(userId),
-      refreshToken: await this.createRefreshToken(userId),
+      accessToken: tokensPair[0],
+      refreshToken: tokensPair[1],
     };
   }
 }
