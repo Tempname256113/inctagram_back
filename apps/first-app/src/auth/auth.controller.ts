@@ -1,10 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Response,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Body, Controller, Post, Response } from '@nestjs/common';
 import { UserLoginDTO, UserRegistrationDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
 import { RegistrationCommand } from './application/commandHandlers/registration.handler';
@@ -43,13 +37,6 @@ export class AuthController {
       LoginCommand,
       number | null
     >(new LoginCommand(userLoginDTO));
-
-    // если нет userId значит логин не прошел
-    if (!userId) {
-      throw new UnauthorizedException(
-        'The email or password are incorrect. Try again please',
-      );
-    }
 
     const { accessToken, refreshToken } =
       await this.tokensService.createTokensPair(userId);

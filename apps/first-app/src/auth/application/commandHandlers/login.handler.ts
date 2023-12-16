@@ -3,22 +3,22 @@ import { UserLoginDTO } from '../../dto/user.dto';
 import { PrismaService } from '../../../../../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { BcryptService } from '../../utils/bcrypt.service';
+import { UnauthorizedException } from '@nestjs/common';
+import { ErrorsMessagesEnum } from '../../variables/validationErrors.messages';
 
 export class LoginCommand implements ICommand {
   constructor(public readonly userLoginDTO: UserLoginDTO) {}
 }
 
-// возвращает id юзера если логин прошел успешно. если нет то будет null
+// возвращает id юзера если логин прошел успешно
 @CommandHandler(LoginCommand)
-export class LoginHandler
-  implements ICommandHandler<LoginCommand, number | null>
-{
+export class LoginHandler implements ICommandHandler<LoginCommand, number> {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly bcryptUtils: BcryptService,
+    private readonly bcryptService: BcryptService,
   ) {}
 
-  async execute(command: LoginCommand): Promise<number | null> {
+  async execute(command: LoginCommand): Promise<number> {
     const { userLoginDTO } = command;
 
     const foundedUser: User | null = await this.prisma.user.findUnique({
@@ -26,15 +26,23 @@ export class LoginHandler
     });
 
     if (!foundedUser) {
-      return null;
+      throw new UnauthorizedException(
+        ErrorsMessagesEnum.EMAIL_OR_PASSWORD_INCORRECT,
+      );
     }
 
     const passwordIsCorrect: boolean =
-      await this.bcryptUtils.compareHashAndPassword({
+      await this.bcryptService.compareHashAndPassword({
         password: userLoginDTO.password,
         hash: foundedUser.password,
       });
 
-    return passwordIsCorrect ? foundedUser.id : null;
+    if (!passwordIsCorrect) {
+      throw new UnauthorizedException(
+        ErrorsMessagesEnum.EMAIL_OR_PASSWORD_INCORRECT,
+      );
+    }
+
+    return foundedUser.id;
   }
 }

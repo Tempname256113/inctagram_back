@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import {
   AccessTokenPayloadType,
   RefreshTokenPayloadType,
-} from '../dto/tokens.dto';
+} from '../types/tokens.models';
 
 @Injectable()
 export class TokensService {
@@ -64,14 +64,14 @@ export class TokensService {
   async createTokensPair(
     userId: number,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const tokensPair: string[] = await Promise.all([
+    const [accessToken, refreshToken]: string[] = await Promise.all([
       this.createAccessToken(userId),
       this.createRefreshToken(userId),
     ]);
 
     return {
-      accessToken: tokensPair[0],
-      refreshToken: tokensPair[1],
+      accessToken,
+      refreshToken,
     };
   }
 }
