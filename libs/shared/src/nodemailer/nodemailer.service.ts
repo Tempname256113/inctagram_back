@@ -42,4 +42,23 @@ export class NodemailerService {
       console.error(err);
     }
   }
+
+  async sendChangePasswordRequestEmail({
+    email,
+    token,
+  }: {
+    email: string;
+    token: string;
+  }) {
+    try {
+      await this.transporter.sendMail({
+        from: this.nodemailerEmailUser,
+        to: email,
+        subject: 'Password recovery',
+        html: `To reset your password follow link: <a href='http://localhost:3021/auth/change-email?token=${token}'>Password recovery</a>`,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  }
 }
