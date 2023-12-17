@@ -40,7 +40,7 @@ export class RegistrationHandler
   }): Promise<boolean> {
     const { username, email, password } = data;
 
-    const foundedUser: User | null = await this.prisma.user.findFirst({
+    const foundedUser = await this.prisma.user.findFirst({
       where: { OR: [{ username }, { email }] },
       include: { userAdditionalInfo: true },
     });
