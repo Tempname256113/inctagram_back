@@ -1,12 +1,11 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { UserRegistrationDTO } from '../../dto/user.dto';
-import { User } from '@prisma/client';
-import { PrismaService } from '../../../../../../prisma/prisma.service';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import { add } from 'date-fns';
 import * as crypto from 'crypto';
 import { ConflictException } from '@nestjs/common';
+import { PrismaService } from 'lib/database';
 
 export class RegistrationCommand implements ICommand {
   constructor(public readonly userRegistrationDTO: UserRegistrationDTO) {}
@@ -74,9 +73,9 @@ export class RegistrationHandler
       }
     }
 
-    if (foundedUser.email === email) {
+    if (foundedUser?.email === email) {
       throw new ConflictException('User with this email is already registered');
-    } else if (foundedUser.username === username) {
+    } else if (foundedUser?.username === username) {
       throw new ConflictException(
         'User with this username is already registered',
       );

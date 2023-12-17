@@ -23,6 +23,12 @@
       ],
       "@app/config/*": [
         "libs/config/src/*"
+      ],
+      "lib/database": [
+        "libs/database/src"
+      ],
+      "lib/database/*": [
+        "libs/database/src/*"
       ]
     }
   }
