@@ -5,8 +5,9 @@ import { RegistrationCommand } from './application/commandHandlers/registration.
 import { LoginCommand } from './application/commandHandlers/login.handler';
 import { TokensService } from './utils/tokens.service';
 import { refreshTokenProp } from './variables/refreshToken.variable';
-import { PasswordRecoveryRequestDTO } from './dto';
+import { PasswordRecoveryDTO, PasswordRecoveryRequestDTO } from './dto';
 import { PasswordRecoveryRequestCommand } from './application/commandHandlers/password-recovery-request.handler';
+import { PasswordRecoveryCommand } from './application/commandHandlers/password-recovery.handler';
 
 @Controller('auth')
 export class AuthController {
@@ -57,6 +58,15 @@ export class AuthController {
   ) {
     await this.commandBus.execute(
       new PasswordRecoveryRequestCommand(passwordRecoveryRequestDTO),
+    );
+
+    return { ok: true };
+  }
+
+  @Post('password-recovery')
+  async passwordRecovery(@Body() passwordRecoveryDTO: PasswordRecoveryDTO) {
+    await this.commandBus.execute(
+      new PasswordRecoveryCommand(passwordRecoveryDTO),
     );
 
     return { ok: true };
