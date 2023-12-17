@@ -29,6 +29,12 @@
       ],
       "lib/database/*": [
         "libs/database/src/*"
+      ],
+      "lib/shared": [
+        "libs/shared/src"
+      ],
+      "lib/shared/*": [
+        "libs/shared/src/*"
       ]
     }
   }
