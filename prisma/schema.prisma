@@ -30,6 +30,7 @@ model User {
   password           String
   userAdditionalInfo UserAdditionalInfo?
   authTokens AuthToken[]
+  changePasswordRequests ChangePasswordRequest[]
 
   @@map("users")
 }
@@ -55,4 +56,24 @@ model AuthToken {
   user              User @relation(fields: [userId], references: [id])
 
   @@map("auth_tokens")
+}
+
+enum ChangePasswordRequestStateEnum {
+  pending
+  processed
+}
+
+model ChangePasswordRequest {
+  id Int @id @default(autoincrement())
+  userId Int
+  state ChangePasswordRequestStateEnum @default(pending)
+  token String @db.Text
+  expiresAt DateTime
+  processedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  deletedAt DateTime?
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("change_password_requests")
 }
