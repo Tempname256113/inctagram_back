@@ -11,6 +11,7 @@
 // чтобы использовать новые изменения prisma в программе
 // prisma generate
 
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,12 +19,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-model playing_with_neon {
-  id    Int    @id @default(autoincrement())
-  name  String
-  value Float? @db.Real
 }
 
 model User {
