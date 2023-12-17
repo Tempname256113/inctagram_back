@@ -5,9 +5,9 @@ import { RegistrationHandler } from './application/commandHandlers/registration.
 import { TokensService } from './utils/tokens.service';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginHandler } from './application/commandHandlers/login.handler';
-import { DatabaseModule } from 'lib/database';
-import { BcryptModule } from 'lib/shared/bcrypt';
-import { NodemailerModule } from 'lib/shared/nodemailer';
+import { DatabaseModule } from '@lib/database';
+import { BcryptModule } from '@lib/shared/bcrypt';
+import { NodemailerModule } from '@lib/shared/nodemailer';
 
 const commandHandlers = [RegistrationHandler, LoginHandler];
 

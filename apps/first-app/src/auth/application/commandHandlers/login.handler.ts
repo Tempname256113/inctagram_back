@@ -3,8 +3,8 @@ import { UserLoginDTO } from '../../dto/user.dto';
 import { User } from '@prisma/client';
 import { UnauthorizedException } from '@nestjs/common';
 import { ErrorsMessagesEnum } from '../../variables/validationErrors.messages';
-import { PrismaService } from 'lib/database';
-import { BcryptService } from 'lib/shared/bcrypt';
+import { PrismaService } from '@lib/database';
+import { BcryptService } from '@lib/shared/bcrypt';
 
 export class LoginCommand implements ICommand {
   constructor(public readonly userLoginDTO: UserLoginDTO) {}

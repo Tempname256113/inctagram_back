@@ -3,9 +3,9 @@ import { UserRegistrationDTO } from '../../dto/user.dto';
 import { add } from 'date-fns';
 import * as crypto from 'crypto';
 import { ConflictException } from '@nestjs/common';
-import { PrismaService } from 'lib/database';
-import { BcryptService } from 'lib/shared/bcrypt';
-import { NodemailerService } from 'lib/shared/nodemailer';
+import { PrismaService } from '@lib/database';
+import { BcryptService } from '@lib/shared/bcrypt';
+import { NodemailerService } from '@lib/shared/nodemailer';
 
 export class RegistrationCommand implements ICommand {
   constructor(public readonly userRegistrationDTO: UserRegistrationDTO) {}
