@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "build:production": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start_first_app:dev": "nest start first-app --watch",
@@ -18,7 +19,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config apps/first-app/test/jest-e2e.json",
-    "prisma_db_pull": "dotenv -e ./config/env/.env.development -- yarn prisma db pull"
+    "prisma_db_pull": "dotenv -e ./config/env/.env.development -- yarn prisma db pull",
+    "build:first-app": "nest build first-app",
+    "start:first-app": "node dist/apps/first-app/main",
+    "start:dev:first-app": "nest start first-app --watch"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
