@@ -1,9 +1,11 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { PasswordRecoveryDTO } from '../../dto';
-import { ChangePasswordRequestService } from 'apps/first-app/src/change-password-request/change-password-request.service';
 import { compareAsc } from 'date-fns';
 import { BadRequestException } from '@nestjs/common';
-import { AUTH_ERRORS } from '@lib/shared/constants';
+import {
+  AUTH_ERRORS,
+  CHANGE_PASSWORD_REQUEST_ERRORS,
+} from '@lib/shared/constants';
 import { PrismaService } from '@lib/database';
 import { ChangePasswordRequestStateEnum } from '@prisma/client';
 import { BcryptService } from '@lib/shared/bcrypt';
@@ -17,7 +19,6 @@ export class PasswordRecoveryHandler
   implements ICommandHandler<PasswordRecoveryCommand, void>
 {
   constructor(
-    private readonly changePasswordRequestService: ChangePasswordRequestService,
     private readonly prismaService: PrismaService,
     private readonly bcryptService: BcryptService,
   ) {}
@@ -25,38 +26,53 @@ export class PasswordRecoveryHandler
   async execute({
     passwordRecoveryDTO,
   }: PasswordRecoveryCommand): Promise<void> {
-    const changePasswordRequest =
-      await this.changePasswordRequestService.findChangePasswordRequestByToken(
-        passwordRecoveryDTO.token,
-      );
+    const changePasswordRequest = await this.findChangePasswordRequestByToken(
+      passwordRecoveryDTO.token,
+    );
 
     if (compareAsc(changePasswordRequest.expiresAt, new Date()) === -1) {
-      await this.changePasswordRequestService.softDelete(
-        changePasswordRequest.id,
-      );
+      await this.prismaService.changePasswordRequest.update({
+        where: { id: changePasswordRequest.id },
+        data: { deletedAt: new Date() },
+      });
 
       throw new BadRequestException(AUTH_ERRORS.PASSWORD_TOKEN_EXPIRED);
     }
 
-    await this.prismaService.changePasswordRequest.update({
-      where: { id: changePasswordRequest.id },
-      data: {
-        state: ChangePasswordRequestStateEnum.processed,
-        processedAt: new Date(),
-      },
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.changePasswordRequest.update({
+        where: { id: changePasswordRequest.id },
+        data: {
+          state: ChangePasswordRequestStateEnum.processed,
+          processedAt: new Date(),
+        },
+      });
+
+      const passwordDigest = await this.bcryptService.encryptPassword(
+        passwordRecoveryDTO.password,
+      );
+
+      await tx.user.update({
+        where: { id: changePasswordRequest.userId },
+        data: {
+          password: passwordDigest,
+        },
+      });
     });
 
-    const passwordDigest = await this.bcryptService.encryptPassword(
-      passwordRecoveryDTO.password,
-    );
+    // TODO: drop all sessions users
+  }
 
-    await this.prismaService.user.update({
-      where: { id: changePasswordRequest.userId },
-      data: {
-        password: passwordDigest,
-      },
-    });
+  private async findChangePasswordRequestByToken(token: string) {
+    const changePasswordRequest =
+      await this.prismaService.changePasswordRequest.findFirst({
+        where: { token, state: ChangePasswordRequestStateEnum.pending },
+      });
 
-    // TODO: add transactions, drop all sessions users, think about softDelete
+    if (!changePasswordRequest) {
+      throw new BadRequestException(CHANGE_PASSWORD_REQUEST_ERRORS.NOT_FOUND);
+    }
+
+    return changePasswordRequest;
   }
 }

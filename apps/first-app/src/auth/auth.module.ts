@@ -10,7 +10,6 @@ import { DatabaseModule } from '@lib/database';
 import { BcryptModule } from '@lib/shared/bcrypt';
 import { NodemailerModule } from '@lib/shared/nodemailer';
 import { UserModule } from '../user/user.module';
-import { ChangePasswordRequestModule } from '../change-password-request/change-password-request.module';
 import { PasswordRecoveryHandler } from './application/commandHandlers/password-recovery.handler';
 
 const commandHandlers = [
@@ -28,7 +27,6 @@ const commandHandlers = [
     BcryptModule,
     NodemailerModule,
     UserModule,
-    ChangePasswordRequestModule,
   ],
   controllers: [AuthController],
   providers: [...commandHandlers, TokensService],
