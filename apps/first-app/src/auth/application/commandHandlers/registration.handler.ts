@@ -58,13 +58,13 @@ export class RegistrationHandler
           });
 
         if (userPasswordIsCorrect) {
-          const registrationConfirmCode: string = crypto.randomUUID();
+          const emailConfirmCode: string = crypto.randomUUID();
 
           await this.prisma.userEmailInfo.update({
             where: { userId: foundedUser.id },
             data: {
-              registrationCodeEndDate: add(new Date(), { days: 3 }),
-              registrationConfirmCode,
+              expiresAt: add(new Date(), { days: 3 }),
+              emailConfirmCode: emailConfirmCode,
             },
           });
 
@@ -78,7 +78,7 @@ export class RegistrationHandler
 
           this.nodemailerService.sendRegistrationConfirmMessage({
             email,
-            confirmationCode: registrationConfirmCode,
+            confirmCode: emailConfirmCode,
           });
 
           return true;
@@ -86,9 +86,9 @@ export class RegistrationHandler
       }
     }
 
-    if (foundedUser.email === email) {
+    if (foundedUser?.email === email) {
       throw new ConflictException('User with this email is already registered');
-    } else if (foundedUser.username === username) {
+    } else if (foundedUser?.username === username) {
       throw new ConflictException(
         'User with this username is already registered',
       );
@@ -112,7 +112,7 @@ export class RegistrationHandler
       return;
     }
 
-    const registrationConfirmCode: string = crypto.randomUUID();
+    const emailConfirmCode: string = crypto.randomUUID();
 
     await this.userRepository.createUser({
       user: {
@@ -121,7 +121,7 @@ export class RegistrationHandler
         password: await this.bcryptService.encryptPassword(password),
       },
       emailInfo: {
-        registrationConfirmCode,
+        registrationConfirmCode: emailConfirmCode,
         registrationCodeEndDate: add(new Date(), { days: 3 }),
         emailIsConfirmed: false,
       },
@@ -129,7 +129,7 @@ export class RegistrationHandler
 
     this.nodemailerService.sendRegistrationConfirmMessage({
       email,
-      confirmationCode: registrationConfirmCode,
+      confirmCode: emailConfirmCode,
     });
   }
 }

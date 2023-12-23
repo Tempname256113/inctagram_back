@@ -8,13 +8,25 @@ import { BcryptService } from './utils/bcrypt.service';
 import { TokensService } from './utils/tokens.service';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginHandler } from './application/commandHandlers/login.handler';
+import { PasswordRecoveryHandler } from './application/commandHandlers/passwordRecovery/password-recovery.handler';
+import { NodemailerService } from './utils/nodemailer.service';
+import { BcryptService } from './utils/bcrypt.service';
+import { UserRepository } from './repositories/user.repository';
+import { UserQueryRepository } from './repositories/query/user.queryRepository';
+import { PrismaService } from '@shared/database/prisma.service';
+import { PasswordRecoveryRequestHandler } from './application/commandHandlers/passwordRecovery/password-recovery-request.handler';
+
+const commandHandlers = [
+  RegistrationHandler,
+  LoginHandler,
+  PasswordRecoveryRequestHandler,
+  PasswordRecoveryHandler,
+];
 import { GoogleStrategy } from './passportStrategies/google.strategy';
 import { SessionSerializer } from './passportStrategies/session.serializer';
 import { PassportModule } from '@nestjs/passport';
 import { UserRepository } from './repositories/user.repository';
 import { UserQueryRepository } from './repositories/query/user.queryRepository';
-
-const commandHandlers = [RegistrationHandler, LoginHandler];
 
 const repos = [UserRepository];
 
@@ -24,8 +36,12 @@ const queryRepos = [UserQueryRepository];
   imports: [CqrsModule, JwtModule, PassportModule.register({ session: true })],
   controllers: [AuthController],
   providers: [
-    NodemailerService,
     ...commandHandlers,
+    ...repos,
+    ...queryRepos,
+    TokensService,
+    NodemailerService,
+    BcryptService,
     ...repos,
     ...queryRepos,
     PrismaService,

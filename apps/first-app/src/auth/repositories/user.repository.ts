@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@database/prisma/prisma.service';
 import { Providers, User, UserEmailInfo } from '@prisma/client';
+import { UserChangePasswordRequest } from '@prisma/client';
 
 @Injectable()
 export class UserRepository {
@@ -52,5 +53,35 @@ export class UserRepository {
     data: Partial<UserEmailInfo>,
   ) {
     return this.prisma.userEmailInfo.update({ where: { userId }, data });
+  }
+
+  async createUserChangePasswordRequest(data: {
+    userId: number;
+    passwordRecoveryCode: string;
+    expiresAt: Date;
+  }): Promise<UserChangePasswordRequest> {
+    return this.prisma.userChangePasswordRequest.create({
+      data: {
+        userId: data.userId,
+        passwordRecoveryCode: data.passwordRecoveryCode,
+        expiresAt: data.expiresAt,
+      },
+    });
+  }
+
+  async softDeleteUserChangePasswordRequest(requestId: number): Promise<void> {
+    await this.prisma.userChangePasswordRequest.update({
+      where: { id: requestId },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+  }
+
+  async changeUserPassword(data: { userId: number; password: string }) {
+    return this.prisma.user.update({
+      where: { id: data.userId },
+      data: { password: data.password },
+    });
   }
 }
