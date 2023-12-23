@@ -1,13 +1,25 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
 import { ValidationError } from 'class-validator';
 import * as _ from 'lodash';
+import * as session from 'express-session';
+import * as passport from 'passport';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api/v1');
+  app.use(
+    session({
+      secret: 'topsecret',
+      saveUninitialized: false,
+      resave: false,
+      cookie: { httpOnly: true, secure: true },
+    }),
+  );
+  app.use(passport.initialize());
+  app.use(passport.session());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -32,8 +44,7 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('APP_CONFIG.FIRST_APP_PORT');
+  const port: number = parseInt(process.env.PORT) || 3021;
   await app.listen(port);
   console.log(`first app started on port ${port}`);
 }

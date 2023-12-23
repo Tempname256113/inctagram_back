@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Response } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Redirect,
+  Response,
+  UseGuards,
+} from '@nestjs/common';
 import { UserLoginDTO, UserRegistrationDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
 import { RegistrationCommand } from './application/commandHandlers/registration.handler';
@@ -11,6 +19,7 @@ import {
   UserPasswordRecoveryRequestDTO,
 } from './dto/password-recovery.dto';
 import { PasswordRecoveryRequestCommand } from './application/commandHandlers/passwordRecovery/password-recovery-request.handler';
+import { GoogleAuthGuard } from './guards/google.auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -72,5 +81,18 @@ export class AuthController {
     );
 
     return { ok: true };
+  }
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  async handleGoogleAuth() {
+    return 'Google auth';
+  }
+
+  @Get('google/redirect')
+  @UseGuards(GoogleAuthGuard)
+  @Redirect('http://localhost:3021/')
+  async handleGoogleRedirect() {
+    return 'Google ok';
   }
 }

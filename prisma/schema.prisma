@@ -11,6 +11,8 @@
 // чтобы использовать новые изменения prisma в программе
 // prisma generate
 
+// чтобы создать миграцию нужно использовать команду npx prisma migrate dev --name migrationName
+
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
@@ -23,26 +25,32 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique @db.Citext
-  username String @unique
-  password String
+  id       Int     @id @default(autoincrement())
+  email    String  @unique @db.Citext
+  username String  @unique
+  password String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 
-  userEmailInfo            UserEmailInfo?
-  userPasswordRecoveryInfo UserChangePasswordRequest[]
+  userEmailInfo              UserEmailInfo?
+  userChangePasswordRequests UserChangePasswordRequest[]
 
   @@map("users")
 }
 
+enum Providers {
+  Google
+  Github
+}
+
 model UserEmailInfo {
-  userId           Int       @id @unique
-  emailIsConfirmed Boolean   @default(false)
+  userId           Int        @id
+  emailIsConfirmed Boolean    @default(false)
   emailConfirmCode String?
   // expiresAt это дата после которой код для подтверждения регистрации будет уже не актуален
   expiresAt        DateTime?
+  provider         Providers?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())

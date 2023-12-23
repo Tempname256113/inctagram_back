@@ -25,7 +25,7 @@ export class NodemailerService {
     });
   }
 
-  async sendRegistrationConfirmEmail(data: {
+  async sendRegistrationConfirmMessage(data: {
     email: string;
     confirmCode: string;
   }): Promise<void> {
@@ -59,6 +59,19 @@ export class NodemailerService {
       });
     } catch (err) {
       console.log(err);
+    }
+  }
+
+  async sendRegistrationSuccessfulMessage(email: string): Promise<void> {
+    try {
+      await this.transporter.sendMail({
+        from: this.nodemailerEmailUser,
+        to: email,
+        subject: 'Successful registration',
+        html: `Thank you for registration on inctagram`,
+      });
+    } catch (err) {
+      console.error(err);
     }
   }
 }
