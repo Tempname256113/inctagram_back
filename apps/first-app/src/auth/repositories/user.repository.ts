@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@database/prisma/prisma.service';
 import { Providers, User, UserEmailInfo } from '@prisma/client';
 import { UserChangePasswordRequest } from '@prisma/client';
+import { PrismaService } from '@shared/database/prisma.service';
 
 @Injectable()
 export class UserRepository {
@@ -38,8 +38,8 @@ export class UserRepository {
           create: {
             provider,
             emailIsConfirmed,
-            registrationCodeEndDate,
-            registrationConfirmCode,
+            expiresAt: registrationCodeEndDate,
+            emailConfirmCode: registrationConfirmCode,
           },
         },
       },

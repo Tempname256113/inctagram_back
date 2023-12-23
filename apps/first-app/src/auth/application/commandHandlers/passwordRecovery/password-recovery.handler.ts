@@ -28,9 +28,10 @@ export class PasswordRecoveryHandler
     passwordRecoveryDTO,
   }: PasswordRecoveryCommand): Promise<void> {
     const changePasswordRequest =
-      await this.userQueryRepository.getUserChangePasswordRequest({
+      await this.userQueryRepository.getUserChangePasswordRequestByCode({
         recoveryCode: passwordRecoveryDTO.passwordRecoveryCode,
         state: UserChangePasswordRequestStates.pending,
+        deleted: false,
       });
 
     if (!changePasswordRequest) {

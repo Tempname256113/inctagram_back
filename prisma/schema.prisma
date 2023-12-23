@@ -11,6 +11,8 @@
 // чтобы использовать новые изменения prisma в программе
 // prisma generate
 
+// чтобы создать миграцию нужно использовать команду npx prisma migrate dev --name migrationName
+
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
@@ -23,16 +25,16 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique @db.Citext
-  username String @unique
-  password String
+  id       Int     @id @default(autoincrement())
+  email    String  @unique @db.Citext
+  username String  @unique
+  password String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 
-  userEmailInfo            UserEmailInfo?
-  userPasswordRecoveryInfo UserChangePasswordRequest[]
+  userEmailInfo              UserEmailInfo?
+  userChangePasswordRequests UserChangePasswordRequest[]
 
   @@map("users")
 }
@@ -55,7 +57,7 @@ model UserEmailInfo {
 
   user User @relation(fields: [userId], references: [id])
 
-  @@map("user_additional_info")
+  @@map("user_email_info")
 }
 
 enum UserChangePasswordRequestStates {

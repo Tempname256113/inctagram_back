@@ -14,16 +14,38 @@ export class UserQueryRepository {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async getUserChangePasswordRequest(data: {
+  async getUserChangePasswordRequestByCode(data: {
     recoveryCode: string;
     state: UserChangePasswordRequestStates;
+    deleted?: boolean;
   }): Promise<UserChangePasswordRequest | null> {
-    return this.prisma.userChangePasswordRequest.findFirst({
-      where: {
-        passwordRecoveryCode: data.recoveryCode,
-        state: data.state,
-      },
-    });
+    const { recoveryCode, state, deleted = 'default' } = data;
+
+    if (deleted === 'default') {
+      return this.prisma.userChangePasswordRequest.findFirst({
+        where: {
+          passwordRecoveryCode: recoveryCode,
+          state,
+        },
+      });
+    }
+
+    if (data.deleted) {
+      return this.prisma.userChangePasswordRequest.findFirst({
+        where: {
+          passwordRecoveryCode: recoveryCode,
+          state,
+        },
+      });
+    } else {
+      return this.prisma.userChangePasswordRequest.findFirst({
+        where: {
+          passwordRecoveryCode: recoveryCode,
+          state,
+          deletedAt: { not: null },
+        },
+      });
+    }
   }
 
   async getUserByEmailOrUsernameWithFullInfo(data: {
@@ -34,7 +56,7 @@ export class UserQueryRepository {
 
     return this.prisma.user.findFirst({
       where: { OR: [{ username, email }] },
-      include: { userEmailInfo: true },
+      include: { userEmailInfo: true, userChangePasswordRequests: true },
     });
   }
 }

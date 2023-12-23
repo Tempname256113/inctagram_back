@@ -1,6 +1,5 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { UserRegistrationDTO } from '../../dto/user.dto';
-import { PrismaService } from '@database/prisma/prisma.service';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import { add } from 'date-fns';
@@ -18,7 +17,6 @@ export class RegistrationHandler
   implements ICommandHandler<RegistrationCommand, void>
 {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly bcryptService: BcryptService,
     private readonly nodemailerService: NodemailerService,
     private readonly userRepository: UserRepository,
@@ -60,19 +58,11 @@ export class RegistrationHandler
         if (userPasswordIsCorrect) {
           const emailConfirmCode: string = crypto.randomUUID();
 
-          await this.prisma.userEmailInfo.update({
-            where: { userId: foundedUser.id },
-            data: {
-              expiresAt: add(new Date(), { days: 3 }),
-              emailConfirmCode: emailConfirmCode,
-            },
-          });
-
           await this.userRepository.updateUserEmailInfoByUserId(
             foundedUser.id,
             {
-              registrationCodeEndDate: add(new Date(), { days: 3 }),
-              registrationConfirmCode,
+              expiresAt: add(new Date(), { days: 3 }),
+              emailConfirmCode,
             },
           );
 

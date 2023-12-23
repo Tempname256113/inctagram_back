@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-google-oauth20';
 import { UserRepository } from '../repositories/user.repository';
-import { Providers } from '@prisma/client';
 import { UserQueryRepository } from '../repositories/query/user.queryRepository';
 import { NodemailerService } from '../utils/nodemailer.service';
+import { Providers } from '@prisma/client';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy) {
