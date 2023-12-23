@@ -35,8 +35,22 @@ model User {
 
   userEmailInfo              UserEmailInfo?
   userChangePasswordRequests UserChangePasswordRequest[]
+  userSessions               UserSession[]
 
   @@map("users")
+}
+
+model UserSession {
+  userId           Int
+  refreshTokenUuid String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, refreshTokenUuid])
+  @@map("user_sessions")
 }
 
 enum Providers {
