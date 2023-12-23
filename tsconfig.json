@@ -18,12 +18,8 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@lib/config": ["libs/config/src"],
-      "@lib/config/*": ["libs/config/src/*"],
-      "@lib/database": ["libs/database/src"],
-      "@lib/database/*": ["libs/database/src/*"],
-      "@lib/shared": ["libs/shared/src"],
-      "@lib/shared/*": ["libs/shared/src/*"]
+      "@shared/config/*": ["shared/config/*"],
+      "@shared/database/*": ["shared/database/*"],
     }
   }
 }

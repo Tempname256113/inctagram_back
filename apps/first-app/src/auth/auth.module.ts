@@ -5,13 +5,13 @@ import { RegistrationHandler } from './application/commandHandlers/registration.
 import { TokensService } from './utils/tokens.service';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginHandler } from './application/commandHandlers/login.handler';
-import { PasswordRecoveryRequestHandler } from './application/commandHandlers/password-recovery-request.handler';
-import { DatabaseModule } from '@lib/database';
-import { BcryptModule } from '@lib/shared/bcrypt';
-import { NodemailerModule } from '@lib/shared/nodemailer';
-import { UserModule } from '../user/user.module';
-import { ChangePasswordRequestModule } from '../change-password-request/change-password-request.module';
-import { PasswordRecoveryHandler } from './application/commandHandlers/password-recovery.handler';
+import { PasswordRecoveryHandler } from './application/commandHandlers/passwordRecovery/password-recovery.handler';
+import { NodemailerService } from './utils/nodemailer.service';
+import { BcryptService } from './utils/bcrypt.service';
+import { UserRepository } from './repositories/user.repository';
+import { UserQueryRepository } from './repositories/query/user.queryRepository';
+import { PrismaService } from '@shared/database/prisma.service';
+import { PasswordRecoveryRequestHandler } from './application/commandHandlers/passwordRecovery/password-recovery-request.handler';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -20,17 +20,21 @@ const commandHandlers = [
   PasswordRecoveryHandler,
 ];
 
+const repos = [UserRepository];
+
+const queryRepos = [UserQueryRepository];
+
 @Module({
-  imports: [
-    CqrsModule,
-    JwtModule,
-    DatabaseModule,
-    BcryptModule,
-    NodemailerModule,
-    UserModule,
-    ChangePasswordRequestModule,
-  ],
+  imports: [CqrsModule, JwtModule],
   controllers: [AuthController],
-  providers: [...commandHandlers, TokensService],
+  providers: [
+    ...commandHandlers,
+    ...repos,
+    ...queryRepos,
+    TokensService,
+    NodemailerService,
+    BcryptService,
+    PrismaService,
+  ],
 })
 export class AuthModule {}

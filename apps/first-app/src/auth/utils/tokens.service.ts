@@ -1,5 +1,5 @@
 import { ConfigService, ConfigType } from '@nestjs/config';
-import appConfig from '../../../../../libs/config/src/config.service';
+import appConfig from '../../../../../shared/config/config.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { add, getUnixTime } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';

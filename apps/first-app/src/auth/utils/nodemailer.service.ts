@@ -27,35 +27,35 @@ export class NodemailerService {
 
   async sendRegistrationConfirmEmail(data: {
     email: string;
-    confirmationCode: string;
+    confirmCode: string;
   }): Promise<void> {
-    const { email, confirmationCode } = data;
+    const { email, confirmCode } = data;
 
     try {
       await this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Confirm your registration please',
-        html: `To confirm your registration follow link: <a href='http://localhost:3021/auth/registration/confirm/${confirmationCode}'>confirm registration</a>`,
+        html: `To confirm your registration follow link: <a href='http://localhost:3021/auth/registration/confirm/${confirmCode}'>confirm registration</a>`,
       });
     } catch (err) {
       console.error(err);
     }
   }
 
-  async sendChangePasswordRequestEmail({
+  async sendChangePasswordRequestMessage({
     email,
-    token,
+    userPasswordRecoveryCode,
   }: {
     email: string;
-    token: string;
+    userPasswordRecoveryCode: string;
   }) {
     try {
       await this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Password recovery',
-        html: `To reset your password follow link: <a href='http://localhost:3021/auth/change-email?token=${token}'>Password recovery</a>`,
+        html: `To reset your password follow link: <a href='http://localhost:3021/auth/change-email?token=${userPasswordRecoveryCode}'>Password recovery</a>`,
       });
     } catch (err) {
       console.log(err);

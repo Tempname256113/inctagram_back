@@ -1,9 +1,15 @@
-import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 
-export class PasswordRecoveryDTO {
+export class UserPasswordRecoveryDTO {
   @IsString()
   @IsNotEmpty()
-  token: string;
+  passwordRecoveryCode: string;
 
   @IsString()
   @Matches(
@@ -15,4 +21,9 @@ export class PasswordRecoveryDTO {
   )
   @Length(6, 20, { message: 'Password must contains 6 - 20 length' })
   password: string;
+}
+
+export class UserPasswordRecoveryRequestDTO {
+  @IsEmail()
+  email: string;
 }
