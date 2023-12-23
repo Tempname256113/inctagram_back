@@ -1,10 +1,10 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { UserLoginDTO } from '../../dto/user.dto';
-import { PrismaService } from '../../../../../../prisma/prisma.service';
 import { User } from '@prisma/client';
-import { BcryptService } from '../../utils/bcrypt.service';
 import { UnauthorizedException } from '@nestjs/common';
-import { ErrorsMessagesEnum } from '../../variables/validationErrors.messages';
+import { PrismaService } from '@shared/database/prisma.service';
+import { BcryptService } from '../../utils/bcrypt.service';
+import { USER_ERRORS } from '../../variables/validationErrors.messages';
 
 export class LoginCommand implements ICommand {
   constructor(public readonly userLoginDTO: UserLoginDTO) {}
@@ -26,9 +26,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, number> {
     });
 
     if (!foundedUser) {
-      throw new UnauthorizedException(
-        ErrorsMessagesEnum.EMAIL_OR_PASSWORD_INCORRECT,
-      );
+      throw new UnauthorizedException(USER_ERRORS.EMAIL_OR_PASSWORD_INCORRECT);
     }
 
     const passwordIsCorrect: boolean =
@@ -38,9 +36,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, number> {
       });
 
     if (!passwordIsCorrect) {
-      throw new UnauthorizedException(
-        ErrorsMessagesEnum.EMAIL_OR_PASSWORD_INCORRECT,
-      );
+      throw new UnauthorizedException(USER_ERRORS.EMAIL_OR_PASSWORD_INCORRECT);
     }
 
     return foundedUser.id;

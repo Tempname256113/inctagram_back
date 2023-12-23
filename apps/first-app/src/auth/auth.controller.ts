@@ -5,6 +5,12 @@ import { RegistrationCommand } from './application/commandHandlers/registration.
 import { LoginCommand } from './application/commandHandlers/login.handler';
 import { TokensService } from './utils/tokens.service';
 import { refreshTokenProp } from './variables/refreshToken.variable';
+import { PasswordRecoveryCommand } from './application/commandHandlers/passwordRecovery/password-recovery.handler';
+import {
+  UserPasswordRecoveryDTO,
+  UserPasswordRecoveryRequestDTO,
+} from './dto/password-recovery.dto';
+import { PasswordRecoveryRequestCommand } from './application/commandHandlers/passwordRecovery/password-recovery-request.handler';
 
 @Controller('auth')
 export class AuthController {
@@ -17,7 +23,7 @@ export class AuthController {
   async registration(
     @Body() userRegistrationDTO: UserRegistrationDTO,
   ): Promise<string> {
-    await this.commandBus.execute<RegistrationCommand, void>(
+    await this.commandBus.execute(
       new RegistrationCommand({
         email: userRegistrationDTO.email,
         password: userRegistrationDTO.password,
@@ -33,10 +39,9 @@ export class AuthController {
     @Body() userLoginDTO: UserLoginDTO,
     @Response({ passthrough: true }) res,
   ): Promise<{ accessToken: string }> {
-    const userId: number | null = await this.commandBus.execute<
-      LoginCommand,
-      number | null
-    >(new LoginCommand(userLoginDTO));
+    const userId: number | null = await this.commandBus.execute(
+      new LoginCommand(userLoginDTO),
+    );
 
     const { accessToken, refreshToken } =
       await this.tokensService.createTokensPair(userId);
@@ -47,5 +52,25 @@ export class AuthController {
     });
 
     return { accessToken };
+  }
+
+  @Post('password-recovery-request')
+  async passwordRecoveryRequest(
+    @Body() passwordRecoveryRequestDTO: UserPasswordRecoveryRequestDTO,
+  ) {
+    await this.commandBus.execute(
+      new PasswordRecoveryRequestCommand(passwordRecoveryRequestDTO),
+    );
+
+    return { ok: true };
+  }
+
+  @Post('password-recovery')
+  async passwordRecovery(@Body() passwordRecoveryDTO: UserPasswordRecoveryDTO) {
+    await this.commandBus.execute(
+      new PasswordRecoveryCommand(passwordRecoveryDTO),
+    );
+
+    return { ok: true };
   }
 }

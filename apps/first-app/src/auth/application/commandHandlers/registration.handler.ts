@@ -1,12 +1,11 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { UserRegistrationDTO } from '../../dto/user.dto';
-import { User } from '@prisma/client';
-import { PrismaService } from '../../../../../../prisma/prisma.service';
-import { BcryptService } from '../../utils/bcrypt.service';
-import { NodemailerService } from '../../utils/nodemailer.service';
 import { add } from 'date-fns';
 import * as crypto from 'crypto';
 import { ConflictException } from '@nestjs/common';
+import { PrismaService } from '@shared/database/prisma.service';
+import { BcryptService } from '../../utils/bcrypt.service';
+import { NodemailerService } from '../../utils/nodemailer.service';
 
 export class RegistrationCommand implements ICommand {
   constructor(public readonly userRegistrationDTO: UserRegistrationDTO) {}
@@ -40,13 +39,13 @@ export class RegistrationHandler
   }): Promise<boolean> {
     const { username, email, password } = data;
 
-    const foundedUser: User | null = await this.prisma.user.findFirst({
+    const foundedUser = await this.prisma.user.findFirst({
       where: { OR: [{ username }, { email }] },
-      include: { userAdditionalInfo: true },
+      include: { userEmailInfo: true },
     });
 
     if (foundedUser?.username === username && foundedUser?.email === email) {
-      if (!foundedUser.userAdditionalInfo.emailIsConfirmed) {
+      if (!foundedUser.userEmailInfo.emailIsConfirmed) {
         const userPasswordIsCorrect: boolean =
           await this.bcryptService.compareHashAndPassword({
             password,
@@ -54,19 +53,19 @@ export class RegistrationHandler
           });
 
         if (userPasswordIsCorrect) {
-          const registrationConfirmCode: string = crypto.randomUUID();
+          const emailConfirmCode: string = crypto.randomUUID();
 
-          await this.prisma.userAdditionalInfo.update({
+          await this.prisma.userEmailInfo.update({
             where: { userId: foundedUser.id },
             data: {
-              registrationCodeEndDate: add(new Date(), { days: 3 }),
-              registrationConfirmCode,
+              expiresAt: add(new Date(), { days: 3 }),
+              emailConfirmCode: emailConfirmCode,
             },
           });
 
           this.nodemailerService.sendRegistrationConfirmEmail({
             email,
-            confirmationCode: registrationConfirmCode,
+            confirmCode: emailConfirmCode,
           });
 
           return true;
@@ -74,9 +73,9 @@ export class RegistrationHandler
       }
     }
 
-    if (foundedUser.email === email) {
+    if (foundedUser?.email === email) {
       throw new ConflictException('User with this email is already registered');
-    } else if (foundedUser.username === username) {
+    } else if (foundedUser?.username === username) {
       throw new ConflictException(
         'User with this username is already registered',
       );
@@ -100,17 +99,17 @@ export class RegistrationHandler
       return;
     }
 
-    const registrationConfirmCode: string = crypto.randomUUID();
+    const emailConfirmCode: string = crypto.randomUUID();
 
     await this.prisma.user.create({
       data: {
         email,
         username,
         password: await this.bcryptService.encryptPassword(password),
-        userAdditionalInfo: {
+        userEmailInfo: {
           create: {
-            registrationConfirmCode,
-            registrationCodeEndDate: add(new Date(), { days: 3 }),
+            emailConfirmCode,
+            expiresAt: add(new Date(), { days: 3 }),
             emailIsConfirmed: false,
           },
         },
@@ -119,7 +118,7 @@ export class RegistrationHandler
 
     this.nodemailerService.sendRegistrationConfirmEmail({
       email,
-      confirmationCode: registrationConfirmCode,
+      confirmCode: emailConfirmCode,
     });
   }
 }
