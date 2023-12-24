@@ -15,6 +15,7 @@ import { PasswordRecoveryRequestHandler } from './application/commandHandlers/pa
 import { GoogleStrategy } from './passportStrategies/google.strategy';
 import { SessionSerializer } from './passportStrategies/session.serializer';
 import { PassportModule } from '@nestjs/passport';
+import { GithubStrategy } from './passportStrategies/github.strategy';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -39,6 +40,7 @@ const queryRepos = [UserQueryRepository];
     BcryptService,
     PrismaService,
     GoogleStrategy,
+    GithubStrategy,
     SessionSerializer,
   ],
 })
