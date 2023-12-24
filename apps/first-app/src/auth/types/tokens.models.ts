@@ -6,6 +6,7 @@ export type AccessTokenPayloadType = {
 
 export type RefreshTokenPayloadType = {
   userId: number;
+  uuid: string;
   iat?: number;
   exp?: number;
 };

@@ -1,1 +1,1 @@
-export const refreshTokenProp = 'refreshToken';
+export const refreshTokenCookieProp = 'refreshToken';
