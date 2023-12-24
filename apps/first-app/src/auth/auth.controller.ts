@@ -186,7 +186,7 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
-  @Redirect('http://localhost:3021/api/v1')
+  @Redirect('/api/v1')
   async handleGoogleRedirect(
     @Request() req: Req,
     @Response({ passthrough: true }) res: Res,
@@ -228,7 +228,7 @@ export class AuthController {
 
   @Get('github/redirect')
   @UseGuards(GithubAuthGuard)
-  @Redirect('http://localhost:3021/api/v1')
+  @Redirect('/api/v1')
   async handleGithubRedirect(
     @Request() req: Req,
     @Response({ passthrough: true }) res: Res,
