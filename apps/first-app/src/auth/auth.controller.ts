@@ -29,6 +29,7 @@ import { Cookies } from './decorators/cookies.decorator';
 import { Request as Req, Response as Res } from 'express';
 import { User } from '@prisma/client';
 import * as crypto from 'crypto';
+import { GithubAuthGuard } from './guards/github.auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -187,6 +188,48 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Redirect('http://localhost:3021/api/v1')
   async handleGoogleRedirect(
+    @Request() req: Req,
+    @Response({ passthrough: true }) res: Res,
+  ) {
+    const user: User = req.user as User;
+
+    const userId: number = user.id;
+
+    const refreshToken: string = await this.tokensService.createRefreshToken({
+      userId,
+      uuid: crypto.randomUUID(),
+    });
+
+    const refreshTokenPayload: RefreshTokenPayloadType =
+      this.tokensService.getTokenPayload(refreshToken);
+
+    const refreshTokenExpiresAtDate: Date = new Date(
+      refreshTokenPayload.exp * 1000,
+    );
+
+    await this.userRepository.createUserSession({
+      userId,
+      refreshTokenUuid: refreshTokenPayload.uuid,
+      expiresAt: refreshTokenExpiresAtDate,
+    });
+
+    res.cookie(refreshTokenCookieProp, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      expires: refreshTokenExpiresAtDate,
+    });
+  }
+
+  @Get('github')
+  @UseGuards(GithubAuthGuard)
+  async handleGithubAuth() {
+    return 'github auth';
+  }
+
+  @Get('github/redirect')
+  @UseGuards(GithubAuthGuard)
+  @Redirect('http://localhost:3021/api/v1')
+  async handleGithubRedirect(
     @Request() req: Req,
     @Response({ passthrough: true }) res: Res,
   ) {
