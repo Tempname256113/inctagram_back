@@ -1,5 +1,5 @@
 import { ConfigService, ConfigType } from '@nestjs/config';
-import appConfig from '../../../../../shared/config/config.service';
+import appConfig from '@shared/config/config.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { add, getUnixTime } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
@@ -7,6 +7,7 @@ import {
   AccessTokenPayloadType,
   RefreshTokenPayloadType,
 } from '../types/tokens.models';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class TokensService {
@@ -33,11 +34,17 @@ export class TokensService {
     };
   }
 
-  async createAccessToken(userId: number): Promise<string> {
+  async createAccessToken(data: {
+    userId: number;
+    uuid: string;
+  }): Promise<string> {
+    const { userId, uuid } = data;
+
     const currentDate: Date = new Date();
 
     const payload: AccessTokenPayloadType = {
       userId,
+      uuid,
       iat: getUnixTime(currentDate),
       exp: this.getAccessTokenExpiredTime(currentDate),
     };
@@ -47,11 +54,17 @@ export class TokensService {
     });
   }
 
-  async createRefreshToken(userId: number): Promise<string> {
+  async createRefreshToken(data: {
+    userId: number;
+    uuid: string;
+  }): Promise<string> {
+    const { userId, uuid } = data;
+
     const currentDate: Date = new Date();
 
     const payload: RefreshTokenPayloadType = {
       userId,
+      uuid,
       iat: getUnixTime(currentDate),
       exp: this.getRefreshTokenExpiredTime(currentDate),
     };
@@ -64,14 +77,38 @@ export class TokensService {
   async createTokensPair(
     userId: number,
   ): Promise<{ accessToken: string; refreshToken: string }> {
+    const uuid: string = crypto.randomUUID();
+
     const [accessToken, refreshToken]: string[] = await Promise.all([
-      this.createAccessToken(userId),
-      this.createRefreshToken(userId),
+      this.createAccessToken({ userId, uuid }),
+      this.createRefreshToken({ userId, uuid }),
     ]);
 
     return {
       accessToken,
       refreshToken,
     };
+  }
+
+  getTokenPayload(token: string): RefreshTokenPayloadType {
+    return this.jwtService.decode(token);
+  }
+
+  async verifyRefreshToken(
+    refreshToken: string,
+  ): Promise<RefreshTokenPayloadType | null> {
+    try {
+      const refreshTokenPayload = await this.jwtService.verifyAsync(
+        refreshToken,
+        {
+          secret: this.refreshTokenSecret,
+          ignoreExpiration: false,
+        },
+      );
+
+      return refreshTokenPayload;
+    } catch (err) {
+      return null;
+    }
   }
 }

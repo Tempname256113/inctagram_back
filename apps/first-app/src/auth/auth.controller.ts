@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -12,7 +13,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { RegistrationCommand } from './application/commandHandlers/registration.handler';
 import { LoginCommand } from './application/commandHandlers/login.handler';
 import { TokensService } from './utils/tokens.service';
-import { refreshTokenProp } from './variables/refreshToken.variable';
+import { refreshTokenCookieProp } from './variables/refreshToken.variable';
 import { PasswordRecoveryCommand } from './application/commandHandlers/passwordRecovery/password-recovery.handler';
 import {
   UserPasswordRecoveryDTO,
@@ -20,18 +21,20 @@ import {
 } from './dto/password-recovery.dto';
 import { PasswordRecoveryRequestCommand } from './application/commandHandlers/passwordRecovery/password-recovery-request.handler';
 import { GoogleAuthGuard } from './guards/google.auth.guard';
+import { RefreshTokenPayloadType } from './types/tokens.models';
+import { UserRepository } from './repositories/user.repository';
+import { Cookies } from './decorators/cookies.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly tokensService: TokensService,
+    private readonly userRepository: UserRepository,
   ) {}
 
   @Post('registration')
-  async registration(
-    @Body() userRegistrationDTO: UserRegistrationDTO,
-  ): Promise<string> {
+  async registration(@Body() userRegistrationDTO: UserRegistrationDTO) {
     await this.commandBus.execute(
       new RegistrationCommand({
         email: userRegistrationDTO.email,
@@ -47,7 +50,7 @@ export class AuthController {
   async login(
     @Body() userLoginDTO: UserLoginDTO,
     @Response({ passthrough: true }) res,
-  ): Promise<{ accessToken: string }> {
+  ) {
     const userId: number | null = await this.commandBus.execute(
       new LoginCommand(userLoginDTO),
     );
@@ -55,12 +58,42 @@ export class AuthController {
     const { accessToken, refreshToken } =
       await this.tokensService.createTokensPair(userId);
 
-    res.cookie(refreshTokenProp, refreshToken, {
+    const refreshTokenPayload: RefreshTokenPayloadType =
+      this.tokensService.getTokenPayload(refreshToken);
+
+    await this.userRepository.createUserSession({
+      userId,
+      refreshTokenUuid: refreshTokenPayload.uuid,
+      expiresAt: new Date(refreshTokenPayload.exp * 1000),
+    });
+
+    res.cookie(refreshTokenCookieProp, refreshToken, {
       httpOnly: true,
       secure: true,
     });
 
     return { accessToken };
+  }
+
+  @Post('logout')
+  async logout(@Cookies(refreshTokenCookieProp) refreshToken: string) {
+    if (!refreshToken) {
+      throw new BadRequestException('Provide refresh cookie for logout');
+    }
+
+    const refreshTokenPayload: RefreshTokenPayloadType | null =
+      await this.tokensService.verifyRefreshToken(refreshToken);
+
+    if (!refreshTokenPayload) {
+      throw new BadRequestException('Refresh token is invalid');
+    }
+
+    await this.userRepository.deleteUserSession({
+      userId: refreshTokenPayload.userId,
+      refreshTokenUuid: refreshTokenPayload.uuid,
+    });
+
+    return 'Logout success';
   }
 
   @Post('password-recovery-request')

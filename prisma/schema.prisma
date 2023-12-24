@@ -43,6 +43,7 @@ model User {
 model UserSession {
   userId           Int
   refreshTokenUuid String
+  expiresAt        DateTime
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
@@ -52,7 +53,9 @@ model UserSession {
   @@id([userId, refreshTokenUuid])
   @@map("user_sessions")
 }
-
+/// TODO: нужно при логине добавить запись в сессию чтобы потом можно было по сессиям делать логаут +
+/// TODO: также при логине через гугл/гит нужно давать клиенту рефреш и аксес токен
+/// TODO: также нужно сделать свою базу данных для прода и для теста тоже. надо будет посмотреть как можно staging сделать
 enum Providers {
   Google
   Github

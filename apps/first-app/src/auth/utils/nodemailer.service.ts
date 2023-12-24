@@ -36,7 +36,7 @@ export class NodemailerService {
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Confirm your registration please',
-        html: `To confirm your registration follow link: <a href='http://localhost:3021/auth/registration/confirm/${confirmCode}'>confirm registration</a>`,
+        html: `To confirm your registration follow link: <a href='http://localhost:3021/api/v1/auth/registration/confirm/${confirmCode}'>confirm registration</a>`,
       });
     } catch (err) {
       console.error(err);
@@ -55,7 +55,7 @@ export class NodemailerService {
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Password recovery',
-        html: `To reset your password follow link: <a href='http://localhost:3021/auth/change-email?token=${userPasswordRecoveryCode}'>Password recovery</a>`,
+        html: `To reset your password follow link: <a href='http://localhost:3021/api/v1/auth/change-email?token=${userPasswordRecoveryCode}'>Password recovery</a>`,
       });
     } catch (err) {
       console.log(err);

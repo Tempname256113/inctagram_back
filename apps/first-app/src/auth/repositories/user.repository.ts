@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Providers, User, UserEmailInfo } from '@prisma/client';
+import { Providers, User, UserEmailInfo, UserSession } from '@prisma/client';
 import { UserChangePasswordRequest } from '@prisma/client';
 import { PrismaService } from '@shared/database/prisma.service';
 
@@ -82,6 +82,29 @@ export class UserRepository {
     return this.prisma.user.update({
       where: { id: data.userId },
       data: { password: data.password },
+    });
+  }
+
+  async createUserSession(data: {
+    userId: number;
+    refreshTokenUuid: string;
+    expiresAt: Date;
+  }): Promise<UserSession> {
+    return this.prisma.userSession.create({
+      data: {
+        userId: data.userId,
+        refreshTokenUuid: data.refreshTokenUuid,
+        expiresAt: data.expiresAt,
+      },
+    });
+  }
+
+  async deleteUserSession(data: {
+    userId: number;
+    refreshTokenUuid: string;
+  }): Promise<void> {
+    await this.prisma.userSession.deleteMany({
+      where: { userId: data.userId, refreshTokenUuid: data.refreshTokenUuid },
     });
   }
 }
