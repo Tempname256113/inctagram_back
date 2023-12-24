@@ -9,8 +9,10 @@ import {
   Request,
   UseGuards,
   UnauthorizedException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { UserLoginDTO, UserRegistrationDTO } from './dto/user.dto';
+import { UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
 import { RegistrationCommand } from './application/commandHandlers/registration.handler';
 import { LoginCommand } from './application/commandHandlers/login.handler';
@@ -30,8 +32,15 @@ import { Request as Req, Response as Res } from 'express';
 import { User } from '@prisma/client';
 import * as crypto from 'crypto';
 import { GithubAuthGuard } from './guards/github.auth.guard';
+import {
+  ApiConflictResponse,
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @Controller('auth')
+@ApiTags('auth controller')
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -39,8 +48,15 @@ export class AuthController {
     private readonly userRepository: UserRepository,
   ) {}
 
-  @Post('registration')
-  async registration(@Body() userRegistrationDTO: UserRegistrationDTO) {
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreatedResponse({
+    description: 'The user has been successfully created',
+  })
+  @ApiConflictResponse({
+    description: 'The user with provided username or email already registered',
+  })
+  async register(@Body() userRegistrationDTO: UserRegisterDTO) {
     await this.commandBus.execute(
       new RegistrationCommand({
         email: userRegistrationDTO.email,
@@ -87,6 +103,9 @@ export class AuthController {
   }
 
   @Post('update-tokens-pair')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreatedResponse({ description: 'The tokens pair successfully created' })
+  @ApiCookieAuth()
   async updateTokensPair(
     @Cookies(refreshTokenCookieProp) refreshToken: string,
     @Response({ passthrough: true }) res: Res,

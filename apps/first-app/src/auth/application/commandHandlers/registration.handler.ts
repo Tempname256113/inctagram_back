@@ -1,5 +1,5 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
-import { UserRegistrationDTO } from '../../dto/user.dto';
+import { UserRegisterDTO } from '../../dto/user.dto';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import { add } from 'date-fns';
@@ -9,7 +9,7 @@ import { UserRepository } from '../../repositories/user.repository';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 
 export class RegistrationCommand implements ICommand {
-  constructor(public readonly userRegistrationDTO: UserRegistrationDTO) {}
+  constructor(public readonly userRegisterDTO: UserRegisterDTO) {}
 }
 
 @CommandHandler(RegistrationCommand)
@@ -25,7 +25,7 @@ export class RegistrationHandler
 
   async execute(command: RegistrationCommand): Promise<void> {
     const {
-      userRegistrationDTO: { password, email, username },
+      userRegisterDTO: { password, email, username },
     } = command;
 
     // регистрируется новый юзер
@@ -87,7 +87,7 @@ export class RegistrationHandler
     return false;
   }
 
-  async registerNewUser(userRegisterDTO: UserRegistrationDTO): Promise<void> {
+  async registerNewUser(userRegisterDTO: UserRegisterDTO): Promise<void> {
     const { username, email, password } = userRegisterDTO;
 
     // нужно создавать нового юзера или нет

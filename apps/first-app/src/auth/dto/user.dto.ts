@@ -1,7 +1,16 @@
 import { IsEmail, IsString, Length, Matches } from 'class-validator';
 import { USER_ERRORS } from '../variables/validationErrors.messages';
+import { ApiProperty } from '@nestjs/swagger';
 
-export class UserRegistrationDTO {
+export class UserRegisterDTO {
+  @ApiProperty({
+    description: 'The name of user. May contain 0-9; A-Z; a-z; _ ; -',
+    example: 'Temp256113',
+    minLength: 6,
+    maxLength: 30,
+    type: 'string',
+    required: true,
+  })
   @IsString({ message: 'Username must be a string' })
   @Matches(/^[0-9A-Za-z_-]*$/, {
     message: 'Username may contain: 0-9; A-Z; a-z; _ ; -',
@@ -13,6 +22,12 @@ export class UserRegistrationDTO {
     {},
     { message: 'The email must match the format example@example.com' },
   )
+  @ApiProperty({
+    description: 'The email of user',
+    example: 'email123@gmail.com',
+    type: 'string',
+    required: true,
+  })
   email: string;
 
   @IsString()
