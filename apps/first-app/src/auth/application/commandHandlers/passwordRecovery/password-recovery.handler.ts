@@ -1,0 +1,64 @@
+import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import { BadRequestException } from '@nestjs/common';
+import { UserChangePasswordRequestStates } from '@prisma/client';
+import { UserPasswordRecoveryDTO } from '../../../dto/password-recovery.dto';
+import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
+import {
+  AUTH_ERRORS,
+  CHANGE_PASSWORD_REQUEST_ERRORS,
+} from '../../../variables/validationErrors.messages';
+import { UserRepository } from '../../../repositories/user.repository';
+import { BcryptService } from '../../../utils/bcrypt.service';
+
+export class PasswordRecoveryCommand implements ICommand {
+  constructor(public readonly passwordRecoveryDTO: UserPasswordRecoveryDTO) {}
+}
+
+@CommandHandler(PasswordRecoveryCommand)
+export class PasswordRecoveryHandler
+  implements ICommandHandler<PasswordRecoveryCommand, void>
+{
+  constructor(
+    private readonly userQueryRepository: UserQueryRepository,
+    private readonly userRepository: UserRepository,
+    private readonly bcryptService: BcryptService,
+  ) {}
+
+  async execute({
+    passwordRecoveryDTO,
+  }: PasswordRecoveryCommand): Promise<void> {
+    const changePasswordRequest =
+      await this.userQueryRepository.getUserChangePasswordRequestByCode({
+        recoveryCode: passwordRecoveryDTO.passwordRecoveryCode,
+        state: UserChangePasswordRequestStates.pending,
+        deleted: false,
+      });
+
+    if (!changePasswordRequest) {
+      throw new BadRequestException(CHANGE_PASSWORD_REQUEST_ERRORS.NOT_FOUND);
+    }
+
+    if (new Date().getTime() >= changePasswordRequest.expiresAt.getTime()) {
+      await this.userRepository.softDeleteUserChangePasswordRequest(
+        changePasswordRequest.id,
+      );
+
+      throw new BadRequestException(AUTH_ERRORS.PASSWORD_TOKEN_EXPIRED);
+    }
+
+    await this.userRepository.softDeleteUserChangePasswordRequest(
+      changePasswordRequest.id,
+    );
+
+    const passwordHash: string = await this.bcryptService.encryptPassword(
+      passwordRecoveryDTO.password,
+    );
+
+    await this.userRepository.changeUserPassword({
+      userId: changePasswordRequest.userId,
+      password: passwordHash,
+    });
+
+    // TODO: add transactions, drop all sessions users, think about softDelete
+  }
+}

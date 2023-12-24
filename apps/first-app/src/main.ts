@@ -1,19 +1,51 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
+import { ValidationError } from 'class-validator';
+import * as _ from 'lodash';
+import * as session from 'express-session';
+import * as passport from 'passport';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api/v1');
+  app.use(
+    session({
+      secret: 'topsecret',
+      saveUninitialized: false,
+      resave: false,
+      cookie: { httpOnly: true, secure: true },
+    }),
+  );
+  app.use(passport.initialize());
+  app.use(passport.session());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      exceptionFactory: (validationErrors: ValidationError[] = []) => {
+        const constraints = validationErrors.map((error) => {
+          return error.constraints;
+        });
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+        const errors: string[] = [];
 
-  const configService = app.get(ConfigService);
+        constraints.forEach((elem) => {
+          Object.entries(elem).forEach((el) => {
+            errors.push(el[1]);
+          });
+        });
 
-  const port = configService.get<number>('APP_CONFIG.FIRST_APP_PORT');
+        const errorsWithoutDuplicates = _.uniq(errors);
 
+        return new BadRequestException(errorsWithoutDuplicates);
+      },
+    }),
+  );
+  app.use(cookieParser());
+  const port: number = parseInt(process.env.PORT) || 3021;
   await app.listen(port);
-
   console.log(`first app started on port ${port}`);
 }
 bootstrap();
