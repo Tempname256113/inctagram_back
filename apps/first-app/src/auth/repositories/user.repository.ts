@@ -99,6 +99,24 @@ export class UserRepository {
     });
   }
 
+  async updateUserSession(data: {
+    userId: number;
+    currentRefreshTokenUuid: string;
+    newRefreshTokenUuid: string;
+    refreshTokenExpiresAt: Date;
+  }) {
+    return this.prisma.userSession.updateMany({
+      where: {
+        userId: data.userId,
+        refreshTokenUuid: data.currentRefreshTokenUuid,
+      },
+      data: {
+        refreshTokenUuid: data.newRefreshTokenUuid,
+        expiresAt: data.refreshTokenExpiresAt,
+      },
+    });
+  }
+
   async deleteUserSession(data: {
     userId: number;
     refreshTokenUuid: string;

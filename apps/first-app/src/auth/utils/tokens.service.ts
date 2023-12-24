@@ -34,17 +34,11 @@ export class TokensService {
     };
   }
 
-  async createAccessToken(data: {
-    userId: number;
-    uuid: string;
-  }): Promise<string> {
-    const { userId, uuid } = data;
-
+  async createAccessToken(userId: number): Promise<string> {
     const currentDate: Date = new Date();
 
     const payload: AccessTokenPayloadType = {
       userId,
-      uuid,
       iat: getUnixTime(currentDate),
       exp: this.getAccessTokenExpiredTime(currentDate),
     };
@@ -74,13 +68,14 @@ export class TokensService {
     });
   }
 
-  async createTokensPair(
-    userId: number,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const uuid: string = crypto.randomUUID();
+  async createTokensPair(data: {
+    userId: number;
+    uuid?: string;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    const { userId, uuid = crypto.randomUUID() } = data;
 
     const [accessToken, refreshToken]: string[] = await Promise.all([
-      this.createAccessToken({ userId, uuid }),
+      this.createAccessToken(userId),
       this.createRefreshToken({ userId, uuid }),
     ]);
 

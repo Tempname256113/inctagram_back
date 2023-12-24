@@ -4,7 +4,7 @@ import { Profile, Strategy } from 'passport-google-oauth20';
 import { UserRepository } from '../repositories/user.repository';
 import { UserQueryRepository } from '../repositories/query/user.queryRepository';
 import { NodemailerService } from '../utils/nodemailer.service';
-import { Providers } from '@prisma/client';
+import { Providers, User } from '@prisma/client';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy) {
@@ -23,22 +23,28 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
 
   // то что возвращается из этого метода попадает дальше в session serializer
   // в метод serializeUser первым параметром
-  // поэтому я передаю здесь дальше только email чтобы проверить что по юзеру
-  async validate(accessToken: string, refreshToken: string, profile: Profile) {
+  // поэтому я передаю здесь дальше юзера чтобы проверить что по юзеру
+
+  // также то что возвращается из этого метода будет прикреплено к req.user
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+  ): Promise<User> {
     const userEmail: string = profile._json.email;
 
-    const foundedUser =
+    const foundedUser: User | null =
       await this.userQueryRepository.getUserByEmail(userEmail);
 
-    if (foundedUser) return foundedUser.email;
+    if (foundedUser) return foundedUser;
 
-    const newUser = await this.userRepository.createUser({
+    const newUser: User = await this.userRepository.createUser({
       user: { email: userEmail, username: profile._json.name },
       emailInfo: { provider: Providers.Google, emailIsConfirmed: true },
     });
 
     this.nodemailerService.sendRegistrationSuccessfulMessage(userEmail);
 
-    return newUser.email;
+    return newUser;
   }
 }
