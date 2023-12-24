@@ -98,3 +98,9 @@ model UserChangePasswordRequest {
 
   @@map("user_change_password_requests")
 }
+
+model playing_with_neon {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value Float? @db.Real
+}
