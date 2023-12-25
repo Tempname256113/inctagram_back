@@ -8,13 +8,13 @@
   "scripts": {
     "build": "nest build",
     "build:production": "nest build",
-    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
+    "format": "prettier --write \"apps/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start_first_app:dev": "nest start first-app --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/first-app/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,apps,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -101,11 +101,7 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
-      "<rootDir>/apps/",
-      "<rootDir>/libs/"
-    ],
-    "moduleNameMapper": {
-      "^@app/config(|/.*)$": "<rootDir>/libs/config/src/$1"
-    }
+      "<rootDir>/apps/"
+    ]
   }
 }
