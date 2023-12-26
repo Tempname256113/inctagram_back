@@ -3,13 +3,13 @@ pipeline {
     agent any
     environment {
         ENV_TYPE = "production"
-        PORT = 3187
+        PORT = 3189
         NAMESPACE = "deepwaterhorizon-ru"
         REGISTRY_HOSTNAME = "temp256113"
-        PROJECT = "auth-service"
+        PROJECT = "deepwaterhorizon-back"
         SERVICE="first-app"
         REGISTRY = "registry.hub.docker.com"
-        DEPLOYMENT_NAME = "auth-service-deployment"
+        DEPLOYMENT_NAME = "deepwaterhorizon-back-deployment"
         IMAGE_NAME = "${env.BUILD_ID}_${env.ENV_TYPE}_${env.GIT_COMMIT}"
         DOCKER_BUILD_NAME = "${env.REGISTRY_HOSTNAME}/${env.PROJECT}:${env.IMAGE_NAME}"
     }
