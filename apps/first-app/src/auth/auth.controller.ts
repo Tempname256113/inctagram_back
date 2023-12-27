@@ -229,6 +229,7 @@ export class AuthController {
     );
   }
 
+  /// TODO нужно сделать pass recovery GET method with code in url. email confirm too
   @Post('password-recovery')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ description: 'Password was changed' })
