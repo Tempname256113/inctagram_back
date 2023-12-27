@@ -4,7 +4,7 @@ import { add } from 'date-fns';
 import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
 import { NodemailerService } from '../../../utils/nodemailer.service';
 import { User } from '@prisma/client';
-import { BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { USER_ERRORS } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
 import { UserPasswordRecoveryRequestDTO } from '../../../dto/password-recovery.dto';
@@ -28,18 +28,18 @@ export class PasswordRecoveryRequestHandler
   async execute({
     passwordRecoveryRequestDTO,
   }: PasswordRecoveryRequestCommand): Promise<void> {
-    const foundedUser: User | null =
+    const foundUser: User | null =
       await this.userQueryRepository.getUserByEmail(
         passwordRecoveryRequestDTO.email,
       );
 
-    if (!foundedUser) {
-      throw new BadRequestException(USER_ERRORS.NOT_FOUND);
+    if (!foundUser) {
+      throw new NotFoundException(USER_ERRORS.NOT_FOUND);
     }
 
     await this.sendChangePasswordMessageToUserEmail({
-      userId: foundedUser.id,
-      email: foundedUser.email,
+      userId: foundUser.id,
+      email: foundUser.email,
     });
   }
 

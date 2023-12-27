@@ -32,13 +32,11 @@ export class RegistrationHandler
     await this.registerNewUser({ email, username, password });
   }
 
-  // возвращает true если не нужно регистрировать нового юзера
-  // и false если новый юзер нужен
   async checkUsernameAndEmail(data: {
     username: string;
     email: string;
     password: string;
-  }): Promise<boolean> {
+  }): Promise<'No need to create a new user' | 'Need to create a new user'> {
     const { username, email, password } = data;
 
     const foundedUser =
@@ -71,7 +69,7 @@ export class RegistrationHandler
             confirmCode: emailConfirmCode,
           });
 
-          return true;
+          return 'No need to create a new user';
         }
       }
     }
@@ -84,21 +82,19 @@ export class RegistrationHandler
       );
     }
 
-    return false;
+    return 'Need to create a new user';
   }
 
   async registerNewUser(userRegisterDTO: UserRegisterDTO): Promise<void> {
     const { username, email, password } = userRegisterDTO;
 
-    // нужно создавать нового юзера или нет
-    // возвращается false если нужно и true если не нужно
-    const createNewUserOrNot: boolean = !(await this.checkUsernameAndEmail({
+    const createNewUserOrNot = await this.checkUsernameAndEmail({
       email,
       username,
       password,
-    }));
+    });
 
-    if (!createNewUserOrNot) {
+    if (createNewUserOrNot === 'No need to create a new user') {
       return;
     }
 

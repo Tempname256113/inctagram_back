@@ -19,6 +19,8 @@ async function bootstrap() {
       type: 'http',
       scheme: 'bearer',
       bearerFormat: 'JWT',
+      description:
+        'To access this route you need to provide access token in the headers bearer',
     })
     .addSecurity('cookie', {
       type: 'apiKey',
