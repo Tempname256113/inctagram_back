@@ -1,7 +1,7 @@
 import { IsEmail, IsString, Length, Matches } from 'class-validator';
 import { USER_ERRORS } from '../variables/validationErrors.messages';
 
-export class UserRegistrationDTO {
+export class UserRegisterDTO {
   @IsString({ message: 'Username must be a string' })
   @Matches(/^[0-9A-Za-z_-]*$/, {
     message: 'Username may contain: 0-9; A-Z; a-z; _ ; -',

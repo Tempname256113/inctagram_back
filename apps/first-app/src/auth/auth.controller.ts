@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -9,8 +8,10 @@ import {
   Request,
   UseGuards,
   UnauthorizedException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { UserLoginDTO, UserRegistrationDTO } from './dto/user.dto';
+import { UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
 import { RegistrationCommand } from './application/commandHandlers/registration.handler';
 import { LoginCommand } from './application/commandHandlers/login.handler';
@@ -30,8 +31,31 @@ import { Request as Req, Response as Res } from 'express';
 import { User } from '@prisma/client';
 import * as crypto from 'crypto';
 import { GithubAuthGuard } from './guards/github.auth.guard';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiConflictResponse,
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiExcludeEndpoint,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import {
+  UserLoginDtoSwagger,
+  UserRegisterDtoSwagger,
+} from './swagger/user.dto.swagger';
+import { AccessTokenResponseSwagger } from './swagger/tokens.types.swagger';
+import {
+  UserPasswordRecoveryRequestSwaggerDTO,
+  UserPasswordRecoverySwaggerDTO,
+} from './swagger/passwordRecovery.dto.swagger';
 
 @Controller('auth')
+@ApiTags('auth controller')
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -39,8 +63,16 @@ export class AuthController {
     private readonly userRepository: UserRepository,
   ) {}
 
-  @Post('registration')
-  async registration(@Body() userRegistrationDTO: UserRegistrationDTO) {
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreatedResponse({
+    description: 'The user has been successfully created',
+  })
+  @ApiConflictResponse({
+    description: 'The user with provided username or email already registered',
+  })
+  @ApiBody({ type: UserRegisterDtoSwagger })
+  async register(@Body() userRegistrationDTO: UserRegisterDTO) {
     await this.commandBus.execute(
       new RegistrationCommand({
         email: userRegistrationDTO.email,
@@ -53,6 +85,15 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreatedResponse({
+    description: 'Successful login',
+    type: AccessTokenResponseSwagger,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'The email or password are incorrect. Try again',
+  })
+  @ApiBody({ type: UserLoginDtoSwagger })
   async login(
     @Body() userLoginDTO: UserLoginDTO,
     @Response({ passthrough: true }) res: Res,
@@ -87,13 +128,22 @@ export class AuthController {
   }
 
   @Post('update-tokens-pair')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreatedResponse({
+    description: 'The tokens pair successfully created',
+    type: AccessTokenResponseSwagger,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Provide refresh token in cookies for update tokens pair',
+  })
+  @ApiCookieAuth()
   async updateTokensPair(
     @Cookies(refreshTokenCookieProp) refreshToken: string,
     @Response({ passthrough: true }) res: Res,
   ) {
     if (!refreshToken) {
       throw new UnauthorizedException(
-        'Provide refresh token for update tokens pair',
+        'Provide refresh token in cookies for update tokens pair',
       );
     }
 
@@ -138,16 +188,22 @@ export class AuthController {
   }
 
   @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Logout success' })
+  @ApiUnauthorizedResponse({
+    description: 'Logout failed. Provide refresh token in cookies for logout',
+  })
+  @ApiCookieAuth()
   async logout(@Cookies(refreshTokenCookieProp) refreshToken: string) {
     if (!refreshToken) {
-      throw new BadRequestException('Provide refresh token for logout');
+      throw new UnauthorizedException('Provide refresh token for logout');
     }
 
     const refreshTokenPayload: RefreshTokenPayloadType | null =
       await this.tokensService.verifyRefreshToken(refreshToken);
 
     if (!refreshTokenPayload) {
-      throw new BadRequestException('Refresh token is invalid');
+      throw new UnauthorizedException('Refresh token is invalid');
     }
 
     await this.userRepository.deleteUserSession({
@@ -159,31 +215,42 @@ export class AuthController {
   }
 
   @Post('password-recovery-request')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Password recovery code sent to email' })
+  @ApiNotFoundResponse({
+    description: 'Not found user with provided credentials',
+  })
+  @ApiBody({ type: UserPasswordRecoveryRequestSwaggerDTO })
   async passwordRecoveryRequest(
     @Body() passwordRecoveryRequestDTO: UserPasswordRecoveryRequestDTO,
   ) {
     await this.commandBus.execute(
       new PasswordRecoveryRequestCommand(passwordRecoveryRequestDTO),
     );
-
-    return { ok: true };
   }
 
   @Post('password-recovery')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Password was changed' })
+  @ApiBadRequestResponse({
+    description:
+      'User with provided password recovery code is not found or code is expired',
+  })
+  @ApiBody({ type: UserPasswordRecoverySwaggerDTO })
   async passwordRecovery(@Body() passwordRecoveryDTO: UserPasswordRecoveryDTO) {
     await this.commandBus.execute(
       new PasswordRecoveryCommand(passwordRecoveryDTO),
     );
-
-    return { ok: true };
   }
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
+  @ApiResponse({ description: 'Auth via google', status: 200 })
   async handleGoogleAuth() {
     return 'Google auth';
   }
 
+  @ApiExcludeEndpoint()
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
   @Redirect('/api/v1')
@@ -222,10 +289,12 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(GithubAuthGuard)
+  @ApiResponse({ description: 'Auth via github', status: 200 })
   async handleGithubAuth() {
     return 'github auth';
   }
 
+  @ApiExcludeEndpoint()
   @Get('github/redirect')
   @UseGuards(GithubAuthGuard)
   @Redirect('/api/v1')

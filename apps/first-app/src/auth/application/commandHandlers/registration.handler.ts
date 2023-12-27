@@ -1,5 +1,5 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
-import { UserRegistrationDTO } from '../../dto/user.dto';
+import { UserRegisterDTO } from '../../dto/user.dto';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import { add } from 'date-fns';
@@ -9,7 +9,7 @@ import { UserRepository } from '../../repositories/user.repository';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 
 export class RegistrationCommand implements ICommand {
-  constructor(public readonly userRegistrationDTO: UserRegistrationDTO) {}
+  constructor(public readonly userRegisterDTO: UserRegisterDTO) {}
 }
 
 @CommandHandler(RegistrationCommand)
@@ -25,20 +25,18 @@ export class RegistrationHandler
 
   async execute(command: RegistrationCommand): Promise<void> {
     const {
-      userRegistrationDTO: { password, email, username },
+      userRegisterDTO: { password, email, username },
     } = command;
 
     // регистрируется новый юзер
     await this.registerNewUser({ email, username, password });
   }
 
-  // возвращает true если не нужно регистрировать нового юзера
-  // и false если новый юзер нужен
   async checkUsernameAndEmail(data: {
     username: string;
     email: string;
     password: string;
-  }): Promise<boolean> {
+  }): Promise<'No need to create a new user' | 'Need to create a new user'> {
     const { username, email, password } = data;
 
     const foundedUser =
@@ -71,7 +69,7 @@ export class RegistrationHandler
             confirmCode: emailConfirmCode,
           });
 
-          return true;
+          return 'No need to create a new user';
         }
       }
     }
@@ -84,21 +82,19 @@ export class RegistrationHandler
       );
     }
 
-    return false;
+    return 'Need to create a new user';
   }
 
-  async registerNewUser(userRegisterDTO: UserRegistrationDTO): Promise<void> {
+  async registerNewUser(userRegisterDTO: UserRegisterDTO): Promise<void> {
     const { username, email, password } = userRegisterDTO;
 
-    // нужно создавать нового юзера или нет
-    // возвращается false если нужно и true если не нужно
-    const createNewUserOrNot: boolean = !(await this.checkUsernameAndEmail({
+    const createNewUserOrNot = await this.checkUsernameAndEmail({
       email,
       username,
       password,
-    }));
+    });
 
-    if (!createNewUserOrNot) {
+    if (createNewUserOrNot === 'No need to create a new user') {
       return;
     }
 

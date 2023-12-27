@@ -27,27 +27,29 @@ export class PasswordRecoveryHandler
   async execute({
     passwordRecoveryDTO,
   }: PasswordRecoveryCommand): Promise<void> {
-    const changePasswordRequest =
+    const foundChangePasswordRequest =
       await this.userQueryRepository.getUserChangePasswordRequestByCode({
         recoveryCode: passwordRecoveryDTO.passwordRecoveryCode,
         state: UserChangePasswordRequestStates.pending,
         deleted: false,
       });
 
-    if (!changePasswordRequest) {
+    if (!foundChangePasswordRequest) {
       throw new BadRequestException(CHANGE_PASSWORD_REQUEST_ERRORS.NOT_FOUND);
     }
 
-    if (new Date().getTime() >= changePasswordRequest.expiresAt.getTime()) {
+    if (
+      new Date().getTime() >= foundChangePasswordRequest.expiresAt.getTime()
+    ) {
       await this.userRepository.softDeleteUserChangePasswordRequest(
-        changePasswordRequest.id,
+        foundChangePasswordRequest.id,
       );
 
       throw new BadRequestException(AUTH_ERRORS.PASSWORD_TOKEN_EXPIRED);
     }
 
     await this.userRepository.softDeleteUserChangePasswordRequest(
-      changePasswordRequest.id,
+      foundChangePasswordRequest.id,
     );
 
     const passwordHash: string = await this.bcryptService.encryptPassword(
@@ -55,10 +57,9 @@ export class PasswordRecoveryHandler
     );
 
     await this.userRepository.changeUserPassword({
-      userId: changePasswordRequest.userId,
+      userId: foundChangePasswordRequest.userId,
       password: passwordHash,
     });
-
     // TODO: add transactions, drop all sessions users, think about softDelete
   }
 }
