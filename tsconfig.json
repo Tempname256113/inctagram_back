@@ -20,6 +20,8 @@
     "paths": {
       "@shared/config/*": ["shared/config/*"],
       "@shared/database/*": ["shared/database/*"],
+      "@swagger/auth": ["apps/first-app/src/auth/swagger/common.swagger"],
+      "@commands/auth": ["apps/first-app/src/auth/application/commandHandlers/common.commandHandlers"]
     }
   }
 }

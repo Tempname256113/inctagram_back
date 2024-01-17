@@ -2,27 +2,23 @@ import {
   Body,
   Controller,
   Get,
-  Post,
-  Redirect,
-  Response,
-  Request,
-  UseGuards,
-  UnauthorizedException,
   HttpCode,
   HttpStatus,
+  Post,
+  Redirect,
+  Request,
+  Response,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
-import { RegistrationCommand } from './application/commandHandlers/registration.handler';
-import { LoginCommand } from './application/commandHandlers/login.handler';
 import { TokensService } from './utils/tokens.service';
 import { refreshTokenCookieProp } from './variables/refreshToken.variable';
-import { PasswordRecoveryCommand } from './application/commandHandlers/passwordRecovery/password-recovery.handler';
 import {
   UserPasswordRecoveryDTO,
   UserPasswordRecoveryRequestDTO,
 } from './dto/password-recovery.dto';
-import { PasswordRecoveryRequestCommand } from './application/commandHandlers/passwordRecovery/password-recovery-request.handler';
 import { GoogleAuthGuard } from './guards/google.auth.guard';
 import { RefreshTokenPayloadType } from './types/tokens.models';
 import { UserRepository } from './repositories/user.repository';
@@ -31,31 +27,24 @@ import { Request as Req, Response as Res } from 'express';
 import { User } from '@prisma/client';
 import * as crypto from 'crypto';
 import { GithubAuthGuard } from './guards/github.auth.guard';
+import { ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-  ApiBadRequestResponse,
-  ApiBody,
-  ApiConflictResponse,
-  ApiCookieAuth,
-  ApiCreatedResponse,
-  ApiExcludeEndpoint,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiResponse,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+  LoginRouteSwaggerDescription,
+  LogoutRouteSwaggerDescription,
+  PasswordRecoveryRequestRouteSwaggerDescription,
+  PasswordRecoveryRouteSwaggerDescription,
+  RegisterRouteSwaggerDescription,
+  UpdateTokensPairRouteSwaggerDescription,
+} from '@swagger/auth';
 import {
-  UserLoginDtoSwagger,
-  UserRegisterDtoSwagger,
-} from './swagger/user.dto.swagger';
-import { AccessTokenResponseSwagger } from './swagger/tokens.types.swagger';
-import {
-  UserPasswordRecoveryRequestSwaggerDTO,
-  UserPasswordRecoverySwaggerDTO,
-} from './swagger/passwordRecovery.dto.swagger';
+  LoginCommand,
+  PasswordRecoveryCommand,
+  PasswordRecoveryRequestCommand,
+  RegistrationCommand,
+} from '@commands/auth';
 
 @Controller('auth')
-@ApiTags('auth controller')
+@ApiTags('auth controllers')
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -65,13 +54,7 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiCreatedResponse({
-    description: 'The user has been successfully created',
-  })
-  @ApiConflictResponse({
-    description: 'The user with provided username or email already registered',
-  })
-  @ApiBody({ type: UserRegisterDtoSwagger })
+  @RegisterRouteSwaggerDescription()
   async register(@Body() userRegistrationDTO: UserRegisterDTO) {
     await this.commandBus.execute(
       new RegistrationCommand({
@@ -86,14 +69,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.CREATED)
-  @ApiCreatedResponse({
-    description: 'Successful login',
-    type: AccessTokenResponseSwagger,
-  })
-  @ApiUnauthorizedResponse({
-    description: 'The email or password are incorrect. Try again',
-  })
-  @ApiBody({ type: UserLoginDtoSwagger })
+  @LoginRouteSwaggerDescription()
   async login(
     @Body() userLoginDTO: UserLoginDTO,
     @Response({ passthrough: true }) res: Res,
@@ -129,14 +105,7 @@ export class AuthController {
 
   @Post('update-tokens-pair')
   @HttpCode(HttpStatus.CREATED)
-  @ApiCreatedResponse({
-    description: 'The tokens pair successfully created',
-    type: AccessTokenResponseSwagger,
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Provide refresh token in cookies for update tokens pair',
-  })
-  @ApiCookieAuth()
+  @UpdateTokensPairRouteSwaggerDescription()
   async updateTokensPair(
     @Cookies(refreshTokenCookieProp) refreshToken: string,
     @Response({ passthrough: true }) res: Res,
@@ -189,11 +158,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'Logout success' })
-  @ApiUnauthorizedResponse({
-    description: 'Logout failed. Provide refresh token in cookies for logout',
-  })
-  @ApiCookieAuth()
+  @LogoutRouteSwaggerDescription()
   async logout(@Cookies(refreshTokenCookieProp) refreshToken: string) {
     if (!refreshToken) {
       throw new UnauthorizedException('Provide refresh token for logout');
@@ -216,11 +181,7 @@ export class AuthController {
 
   @Post('password-recovery-request')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'Password recovery code sent to email' })
-  @ApiNotFoundResponse({
-    description: 'Not found user with provided credentials',
-  })
-  @ApiBody({ type: UserPasswordRecoveryRequestSwaggerDTO })
+  @PasswordRecoveryRequestRouteSwaggerDescription()
   async passwordRecoveryRequest(
     @Body() passwordRecoveryRequestDTO: UserPasswordRecoveryRequestDTO,
   ) {
@@ -231,18 +192,14 @@ export class AuthController {
 
   @Post('password-recovery')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'Password was changed' })
-  @ApiBadRequestResponse({
-    description:
-      'User with provided password recovery code is not found or code is expired',
-  })
-  @ApiBody({ type: UserPasswordRecoverySwaggerDTO })
+  @PasswordRecoveryRouteSwaggerDescription()
   async passwordRecovery(@Body() passwordRecoveryDTO: UserPasswordRecoveryDTO) {
     await this.commandBus.execute(
       new PasswordRecoveryCommand(passwordRecoveryDTO),
     );
   }
 
+  @ApiExcludeEndpoint()
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   @ApiResponse({ description: 'Auth via google', status: 200 })
@@ -287,6 +244,7 @@ export class AuthController {
     });
   }
 
+  @ApiExcludeEndpoint()
   @Get('github')
   @UseGuards(GithubAuthGuard)
   @ApiResponse({ description: 'Auth via github', status: 200 })

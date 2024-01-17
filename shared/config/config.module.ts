@@ -1,5 +1,5 @@
 import { ConfigModule } from '@nestjs/config';
-import appConfig from './config.service';
+import appConfig from './app.config.service';
 
 export const EnvModule = ConfigModule.forRoot({
   isGlobal: true,
