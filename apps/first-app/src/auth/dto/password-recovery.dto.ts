@@ -5,6 +5,7 @@ import {
   Length,
   Matches,
 } from 'class-validator';
+import { USER_ERRORS } from '../variables/validationErrors.messages';
 
 export class UserPasswordRecoveryDTO {
   @IsString()
@@ -14,10 +15,7 @@ export class UserPasswordRecoveryDTO {
   @IsString()
   @Matches(
     /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*()_+|~\-=`{}[\]:;"'<>,.?/]).{6,}$/,
-    {
-      message: `Password must contain 0-9, a-z, A-Z, ! " # $ % &
-' ( ) * + , - . / : ; < = > ? @ [ \\ ] ^ _\` { | } ~`,
-    },
+    { message: USER_ERRORS.PASSWORD_MUST_CONTAIN_SPECIAL_SYMBOLS },
   )
   @Length(6, 20, { message: 'Password must contains 6 - 20 length' })
   password: string;

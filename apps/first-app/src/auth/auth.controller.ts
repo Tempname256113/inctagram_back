@@ -26,9 +26,9 @@ import { Cookies } from './decorators/cookies.decorator';
 import { Request as Req, Response as Res } from 'express';
 import { User } from '@prisma/client';
 import * as crypto from 'crypto';
-import { GithubAuthGuard } from './guards/github.auth.guard';
-import { ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import {
+  GithubAuthRouteSwaggerDescription,
   LoginRouteSwaggerDescription,
   LogoutRouteSwaggerDescription,
   PasswordRecoveryRequestRouteSwaggerDescription,
@@ -42,6 +42,11 @@ import {
   PasswordRecoveryRequestCommand,
   RegistrationCommand,
 } from '@commands/auth';
+import { GithubAuthDto } from './dto/githubAuth.dto';
+import {
+  GithubAuthCommand,
+  GithubUserInfo,
+} from './application/commandHandlers/githubAuth.handler';
 
 @Controller('auth')
 @ApiTags('auth controllers')
@@ -202,7 +207,6 @@ export class AuthController {
   @ApiExcludeEndpoint()
   @Get('google')
   @UseGuards(GoogleAuthGuard)
-  @ApiResponse({ description: 'Auth via google', status: 200 })
   async handleGoogleAuth() {
     return 'Google auth';
   }
@@ -245,39 +249,32 @@ export class AuthController {
   }
 
   @ApiExcludeEndpoint()
-  @Get('github')
-  @UseGuards(GithubAuthGuard)
-  @ApiResponse({ description: 'Auth via github', status: 200 })
-  async handleGithubAuth() {
-    return 'github auth';
-  }
-
-  @ApiExcludeEndpoint()
-  @Get('github/redirect')
-  @UseGuards(GithubAuthGuard)
-  @Redirect('/api/v1')
-  async handleGithubRedirect(
-    @Request() req: Req,
+  @Post('github-auth')
+  @HttpCode(HttpStatus.OK)
+  @GithubAuthRouteSwaggerDescription()
+  async authViaGithub(
+    @Body() githubAuthCode: GithubAuthDto,
     @Response({ passthrough: true }) res: Res,
-  ) {
-    const user: User = req.user as User;
-
-    const userId: number = user.id;
+  ): Promise<GithubUserInfo> {
+    const userInfo: GithubUserInfo = await this.commandBus.execute(
+      new GithubAuthCommand(githubAuthCode),
+    );
 
     const refreshToken: string = await this.tokensService.createRefreshToken({
-      userId,
+      userId: userInfo.userId,
       uuid: crypto.randomUUID(),
     });
 
     const refreshTokenPayload: RefreshTokenPayloadType =
       this.tokensService.getTokenPayload(refreshToken);
 
+    // так как в JWT токене время в секундах, то его надо перевести в миллисекунды
     const refreshTokenExpiresAtDate: Date = new Date(
       refreshTokenPayload.exp * 1000,
     );
 
     await this.userRepository.createUserSession({
-      userId,
+      userId: userInfo.userId,
       refreshTokenUuid: refreshTokenPayload.uuid,
       expiresAt: refreshTokenExpiresAtDate,
     });
@@ -287,5 +284,51 @@ export class AuthController {
       secure: true,
       expires: refreshTokenExpiresAtDate,
     });
+
+    return userInfo;
   }
+
+  // @ApiExcludeEndpoint()
+  // @Get('github')
+  // @UseGuards(GithubAuthGuard)
+  // async handleGithubAuth() {
+  //   return 'github auth';
+  // }
+
+  // @ApiExcludeEndpoint()
+  // @Get('github/redirect')
+  // @UseGuards(GithubAuthGuard)
+  // @Redirect('/api/v1')
+  // async handleGithubRedirect(
+  //   @Request() req: Req,
+  //   @Response({ passthrough: true }) res: Res,
+  // ) {
+  //   const user: User = req.user as User;
+  //
+  //   const userId: number = user.id;
+  //
+  //   const refreshToken: string = await this.tokensService.createRefreshToken({
+  //     userId,
+  //     uuid: crypto.randomUUID(),
+  //   });
+  //
+  //   const refreshTokenPayload: RefreshTokenPayloadType =
+  //     this.tokensService.getTokenPayload(refreshToken);
+  //
+  //   const refreshTokenExpiresAtDate: Date = new Date(
+  //     refreshTokenPayload.exp * 1000,
+  //   );
+  //
+  //   await this.userRepository.createUserSession({
+  //     userId,
+  //     refreshTokenUuid: refreshTokenPayload.uuid,
+  //     expiresAt: refreshTokenExpiresAtDate,
+  //   });
+  //
+  //   res.cookie(refreshTokenCookieProp, refreshToken, {
+  //     httpOnly: true,
+  //     secure: true,
+  //     expires: refreshTokenExpiresAtDate,
+  //   });
+  // }
 }

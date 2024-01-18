@@ -4,6 +4,7 @@ import { PasswordRecoveryRouteSwaggerDescription } from './controllers/auth/pass
 import { PasswordRecoveryRequestRouteSwaggerDescription } from './controllers/auth/passwordRecoveryRequest.route.swagger';
 import { RegisterRouteSwaggerDescription } from './controllers/auth/register.route.swagger';
 import { UpdateTokensPairRouteSwaggerDescription } from './controllers/auth/updateTokensPair.route.swagger';
+import { GithubAuthRouteSwaggerDescription } from './controllers/auth/githubAuth.route.swagger';
 
 export {
   LoginRouteSwaggerDescription,
@@ -12,4 +13,5 @@ export {
   PasswordRecoveryRequestRouteSwaggerDescription,
   RegisterRouteSwaggerDescription,
   UpdateTokensPairRouteSwaggerDescription,
+  GithubAuthRouteSwaggerDescription,
 };
