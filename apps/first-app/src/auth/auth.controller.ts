@@ -248,7 +248,6 @@ export class AuthController {
     });
   }
 
-  @ApiExcludeEndpoint()
   @Post('github-auth')
   @HttpCode(HttpStatus.OK)
   @GithubAuthRouteSwaggerDescription()
