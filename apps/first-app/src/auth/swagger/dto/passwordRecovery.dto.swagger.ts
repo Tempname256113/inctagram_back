@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UserPasswordRecoveryRequestSwaggerDTO {
+export class UserPasswordRecoveryRequestDtoSwagger {
   @ApiProperty({
     description: 'The email of user',
     example: 'email123@gmail.com',
@@ -10,7 +10,7 @@ export class UserPasswordRecoveryRequestSwaggerDTO {
   email: string;
 }
 
-export class UserPasswordRecoverySwaggerDTO {
+export class UserPasswordRecoveryDtoSwagger {
   @ApiProperty({
     description: `The password of user. Must contain 0-9, a-z, A-Z, ! " # $ % &
 ' ( ) * + , - . / : ; < = > ? @ [ \\ ] ^ _\` { | } ~`,

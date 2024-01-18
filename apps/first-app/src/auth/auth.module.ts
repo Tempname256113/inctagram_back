@@ -7,21 +7,23 @@ import { BcryptService } from './utils/bcrypt.service';
 import { TokensService } from './utils/tokens.service';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginHandler } from './application/commandHandlers/login.handler';
-import { PasswordRecoveryHandler } from './application/commandHandlers/passwordRecovery/password-recovery.handler';
+import { PasswordRecoveryHandler } from './application/commandHandlers/passwordRecovery/passwordRecovery.handler';
 import { UserRepository } from './repositories/user.repository';
 import { UserQueryRepository } from './repositories/query/user.queryRepository';
 import { PrismaService } from '@shared/database/prisma.service';
-import { PasswordRecoveryRequestHandler } from './application/commandHandlers/passwordRecovery/password-recovery-request.handler';
+import { PasswordRecoveryRequestHandler } from './application/commandHandlers/passwordRecovery/passwordRecoveryRequest.handler';
 import { GoogleStrategy } from './passportStrategies/google.strategy';
 import { SessionSerializer } from './passportStrategies/session.serializer';
 import { PassportModule } from '@nestjs/passport';
 import { GithubStrategy } from './passportStrategies/github.strategy';
+import { GithubAuthHandler } from './application/commandHandlers/githubAuth.handler';
 
 const commandHandlers = [
   RegistrationHandler,
   LoginHandler,
   PasswordRecoveryRequestHandler,
   PasswordRecoveryHandler,
+  GithubAuthHandler,
 ];
 
 const repos = [UserRepository];
