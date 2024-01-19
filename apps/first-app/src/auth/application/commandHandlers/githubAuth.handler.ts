@@ -1,6 +1,6 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
 import { GithubAuthDto } from '../../dto/githubAuth.dto';
-import { Inject } from '@nestjs/common';
+import { Inject, UnauthorizedException } from '@nestjs/common';
 import authConfig from '@shared/config/auth.config.service';
 import { ConfigType } from '@nestjs/config';
 import { Providers, User } from '@prisma/client';
@@ -8,6 +8,7 @@ import { UserQueryRepository } from '../../repositories/query/user.queryReposito
 import { UserRepository } from '../../repositories/user.repository';
 import { TokensService } from '../../utils/tokens.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
+import axios from 'axios';
 
 export class GithubAuthCommand implements ICommand {
   constructor(public readonly githubCode: GithubAuthDto) {}
@@ -38,30 +39,46 @@ export class GithubAuthHandler
     } = command;
 
     const clientId: string = this.config.GITHUB_CLIENT_ID;
-    const clientSecret: string = this.config.GOOGLE_CLIENT_SECRET;
+    const clientSecret: string = this.config.GITHUB_CLIENT_SECRET;
 
     const accessToken: {
       access_token: string;
       token_type: string;
       scope: string;
-    } = await fetch(
-      `https://github.com/login/oauth/access_token?client_id=${clientId}&client_secret=${clientSecret}&code=${githubCode}`,
-    ).then((response) => response.json());
+    } = await axios({
+      method: 'post',
+      url: `https://github.com/login/oauth/access_token?client_id=${clientId}&client_secret=${clientSecret}&code=${githubCode}`,
+      headers: { Accept: 'application/json' },
+    })
+      .then((res) => res.data)
+      .catch((err) => {
+        throw new UnauthorizedException(err.data);
+      });
 
     const userEmails: {
       email: string;
       primary: boolean;
       verified: boolean;
       visibility: string;
-    }[] = await fetch('https://api.github.com/user/emails', {
-      method: 'GET',
-      headers: { Authorization: accessToken.access_token },
-    }).then((response) => response.json());
+    }[] = await axios({
+      method: 'get',
+      url: 'https://api.github.com/user/emails',
+      headers: { Authorization: `token ${accessToken.access_token}` },
+    })
+      .then((response) => response.data)
+      .catch((err) => {
+        throw new UnauthorizedException(err.data);
+      });
 
-    const userInfo = await fetch('https://api.github.com/user', {
-      method: 'GET',
-      headers: { Authorization: accessToken.access_token },
-    }).then((response) => response.json());
+    const userInfo = await axios({
+      method: 'get',
+      url: 'https://api.github.com/user',
+      headers: { Authorization: `token ${accessToken.access_token}` },
+    })
+      .then((response) => response.data)
+      .catch((err) => {
+        throw new UnauthorizedException(err.data);
+      });
 
     const username: string = userInfo.name ?? userInfo.login;
 
