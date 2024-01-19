@@ -14,7 +14,9 @@ export const GithubAuthRouteSwaggerDescription = () => {
       description: 'Successful login/registration',
       type: GithubAuthReturnUserInfoTypeSwagger,
     }),
-    ApiBadRequestResponse({ description: 'Provide correct github auth code' }),
+    ApiBadRequestResponse({
+      description: 'Provided incorrect github auth code',
+    }),
     ApiUnauthorizedResponse({
       description: 'Provided invalid github auth code',
     }),
