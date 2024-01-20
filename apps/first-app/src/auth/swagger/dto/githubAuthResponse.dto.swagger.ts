@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GithubAuthDtoSwagger {
+export class GithubAuthResponseDtoSwagger {
   @ApiProperty({
     description: 'Code from github',
     example: 'temp256113',

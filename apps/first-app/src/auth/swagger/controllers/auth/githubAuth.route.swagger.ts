@@ -6,7 +6,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { GithubAuthReturnUserInfoTypeSwagger } from '../../dto/githubAuth.returnUserInfoType.swagger';
-import { GithubAuthDtoSwagger } from '../../dto/githubAuth.dto.swagger';
+import { GithubAuthResponseDtoSwagger } from '../../dto/githubAuthResponse.dto.swagger';
 
 export const GithubAuthRouteSwaggerDescription = () => {
   return applyDecorators(
@@ -20,6 +20,6 @@ export const GithubAuthRouteSwaggerDescription = () => {
     ApiUnauthorizedResponse({
       description: 'Provided invalid github auth code',
     }),
-    ApiBody({ type: GithubAuthDtoSwagger, required: true }),
+    ApiBody({ type: GithubAuthResponseDtoSwagger, required: true }),
   );
 };

@@ -3,18 +3,25 @@ import { GithubAuthDto } from '../../dto/githubAuth.dto';
 import { Inject, UnauthorizedException } from '@nestjs/common';
 import authConfig from '@shared/config/auth.config.service';
 import { ConfigType } from '@nestjs/config';
-import { Providers, User } from '@prisma/client';
+import { Providers } from '@prisma/client';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 import { UserRepository } from '../../repositories/user.repository';
 import { TokensService } from '../../utils/tokens.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import axios from 'axios';
+import { Response } from 'express';
+import * as crypto from 'crypto';
+import { RefreshTokenPayloadType } from '../../types/tokens.models';
+import { refreshTokenCookieProp } from '../../variables/refreshToken.variable';
 
 export class GithubAuthCommand implements ICommand {
-  constructor(public readonly githubCode: GithubAuthDto) {}
+  constructor(
+    public readonly githubCode: GithubAuthDto,
+    public readonly res: Response,
+  ) {}
 }
 
-export type GithubUserInfo = {
+export type GithubAuthResponseType = {
   userId: number;
   username: string;
   accessToken: string;
@@ -22,7 +29,7 @@ export type GithubUserInfo = {
 
 @CommandHandler(GithubAuthCommand)
 export class GithubAuthHandler
-  implements ICommandHandler<GithubAuthCommand, GithubUserInfo>
+  implements ICommandHandler<GithubAuthCommand, GithubAuthResponseType>
 {
   constructor(
     @Inject(authConfig.KEY)
@@ -33,11 +40,32 @@ export class GithubAuthHandler
     private readonly nodemailerService: NodemailerService,
   ) {}
 
-  async execute(command: GithubAuthCommand): Promise<GithubUserInfo> {
+  async execute(command: GithubAuthCommand): Promise<GithubAuthResponseType> {
     const {
       githubCode: { code: githubCode },
+      res,
     } = command;
 
+    const userInfoFromGithub = await this.getUserInfoFromGithub(githubCode);
+
+    const userFromDB = await this.getUserFromDB(
+      userInfoFromGithub.userEmail,
+      userInfoFromGithub.username,
+    );
+
+    await this.createUserSession(userFromDB.id, res);
+
+    return {
+      userId: userFromDB.id,
+      username: userFromDB.username,
+      accessToken: await this.tokensService.createAccessToken(userFromDB.id),
+    };
+  }
+
+  async getUserInfoFromGithub(githubCode: string): Promise<{
+    username: string;
+    userEmail: string;
+  }> {
     const clientId: string = this.config.GITHUB_CLIENT_ID;
     const clientSecret: string = this.config.GITHUB_CLIENT_SECRET;
 
@@ -80,34 +108,57 @@ export class GithubAuthHandler
         throw new UnauthorizedException(err.data);
       });
 
-    const username: string = userInfo.name ?? userInfo.login;
+    return {
+      userEmail: userEmails[0].email,
+      username: userInfo.name ?? userInfo.login,
+    };
+  }
 
-    const foundedUser: User | null =
-      await this.userQueryRepository.getUserByEmail(userEmails[0].email);
+  async getUserFromDB(userEmail: string, username: string) {
+    let user = await this.userQueryRepository.getUserByEmail(userEmail);
 
-    if (foundedUser) {
-      await this.userRepository.updateUserEmailInfoByUserId(foundedUser.id, {
-        provider: Providers.Github,
+    if (!user) {
+      user = await this.userRepository.createUser({
+        user: { email: userEmail, username },
+        emailInfo: { provider: Providers.Github, emailIsConfirmed: true },
       });
 
-      return {
-        userId: foundedUser.id,
-        username: foundedUser.username,
-        accessToken: await this.tokensService.createAccessToken(foundedUser.id),
-      };
+      this.nodemailerService.sendRegistrationSuccessfulMessage(user.email);
     }
 
-    const newUser: User = await this.userRepository.createUser({
-      user: { email: userEmails[0].email, username },
-      emailInfo: { provider: Providers.Github, emailIsConfirmed: true },
+    if (user.userEmailInfo.provider !== Providers.Github) {
+      await this.userRepository.updateUserEmailInfoByUserId(user.id, {
+        provider: Providers.Github,
+      });
+    }
+
+    return user;
+  }
+
+  async createUserSession(userId: number, res: Response): Promise<void> {
+    const refreshToken: string = await this.tokensService.createRefreshToken({
+      userId,
+      uuid: crypto.randomUUID(),
     });
 
-    this.nodemailerService.sendRegistrationSuccessfulMessage(newUser.email);
+    const refreshTokenPayload: RefreshTokenPayloadType =
+      this.tokensService.getTokenPayload(refreshToken);
 
-    return {
-      userId: newUser.id,
-      username: newUser.username,
-      accessToken: await this.tokensService.createAccessToken(foundedUser.id),
-    };
+    // так как в JWT токене время в секундах, то его надо перевести в миллисекунды
+    const refreshTokenExpiresAtDate: Date = new Date(
+      refreshTokenPayload.exp * 1000,
+    );
+
+    await this.userRepository.createUserSession({
+      userId,
+      refreshTokenUuid: refreshTokenPayload.uuid,
+      expiresAt: refreshTokenExpiresAtDate,
+    });
+
+    res.cookie(refreshTokenCookieProp, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      expires: refreshTokenExpiresAtDate,
+    });
   }
 }

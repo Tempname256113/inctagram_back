@@ -45,7 +45,7 @@ import {
 import { GithubAuthDto } from './dto/githubAuth.dto';
 import {
   GithubAuthCommand,
-  GithubUserInfo,
+  GithubAuthResponseType,
 } from './application/commandHandlers/githubAuth.handler';
 
 @Controller('auth')
@@ -254,37 +254,8 @@ export class AuthController {
   async authViaGithub(
     @Body() githubAuthCode: GithubAuthDto,
     @Response({ passthrough: true }) res: Res,
-  ): Promise<GithubUserInfo> {
-    const userInfo: GithubUserInfo = await this.commandBus.execute(
-      new GithubAuthCommand(githubAuthCode),
-    );
-
-    const refreshToken: string = await this.tokensService.createRefreshToken({
-      userId: userInfo.userId,
-      uuid: crypto.randomUUID(),
-    });
-
-    const refreshTokenPayload: RefreshTokenPayloadType =
-      this.tokensService.getTokenPayload(refreshToken);
-
-    // так как в JWT токене время в секундах, то его надо перевести в миллисекунды
-    const refreshTokenExpiresAtDate: Date = new Date(
-      refreshTokenPayload.exp * 1000,
-    );
-
-    await this.userRepository.createUserSession({
-      userId: userInfo.userId,
-      refreshTokenUuid: refreshTokenPayload.uuid,
-      expiresAt: refreshTokenExpiresAtDate,
-    });
-
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
-
-    return userInfo;
+  ): Promise<GithubAuthResponseType> {
+    return this.commandBus.execute(new GithubAuthCommand(githubAuthCode, res));
   }
 
   // @ApiExcludeEndpoint()
