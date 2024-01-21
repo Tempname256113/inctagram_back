@@ -73,6 +73,9 @@ export class GithubAuthHandler
       access_token: string;
       token_type: string;
       scope: string;
+      error?: string;
+      error_description?: string;
+      error_uri?: string;
     } = await axios({
       method: 'post',
       url: `https://github.com/login/oauth/access_token?client_id=${clientId}&client_secret=${clientSecret}&code=${githubCode}`,
@@ -80,8 +83,11 @@ export class GithubAuthHandler
     })
       .then((res) => res.data)
       .catch((err) => {
-        throw new UnauthorizedException(err.data);
+        throw new UnauthorizedException(err);
       });
+    if (accessToken.error) {
+      throw new UnauthorizedException(accessToken);
+    }
 
     const userEmails: {
       email: string;
