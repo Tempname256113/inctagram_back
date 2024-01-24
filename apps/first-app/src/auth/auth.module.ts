@@ -17,6 +17,7 @@ import { SessionSerializer } from './passportStrategies/session.serializer';
 import { PassportModule } from '@nestjs/passport';
 import { GithubStrategy } from './passportStrategies/github.strategy';
 import { GithubAuthHandler } from './application/commandHandlers/githubAuth.handler';
+import { GoogleAuthHandler } from './application/commandHandlers/googleAuth.handler';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -24,6 +25,7 @@ const commandHandlers = [
   PasswordRecoveryRequestHandler,
   PasswordRecoveryHandler,
   GithubAuthHandler,
+  GoogleAuthHandler,
 ];
 
 const repos = [UserRepository];

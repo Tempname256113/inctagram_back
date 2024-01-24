@@ -1,15 +1,11 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
-  Redirect,
-  Request,
   Response,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 import { UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
@@ -19,14 +15,12 @@ import {
   UserPasswordRecoveryDTO,
   UserPasswordRecoveryRequestDTO,
 } from './dto/password-recovery.dto';
-import { GoogleAuthGuard } from './guards/google.auth.guard';
 import { RefreshTokenPayloadType } from './types/tokens.models';
 import { UserRepository } from './repositories/user.repository';
 import { Cookies } from './decorators/cookies.decorator';
-import { Request as Req, Response as Res } from 'express';
-import { User } from '@prisma/client';
+import { Response as Res } from 'express';
 import * as crypto from 'crypto';
-import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import {
   GithubAuthRouteSwaggerDescription,
   LoginRouteSwaggerDescription,
@@ -47,6 +41,9 @@ import {
   GithubAuthCommand,
   GithubUserInfo,
 } from './application/commandHandlers/githubAuth.handler';
+import { GoogleAuthDto } from './dto/googleAuth.dto';
+import { GoogleAuthCommand } from './application/commandHandlers/googleAuth.handler';
+import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 
 @Controller('auth')
 @ApiTags('auth controllers')
@@ -204,48 +201,15 @@ export class AuthController {
     );
   }
 
-  @ApiExcludeEndpoint()
-  @Get('google')
-  @UseGuards(GoogleAuthGuard)
-  async handleGoogleAuth() {
-    return 'Google auth';
-  }
-
-  @ApiExcludeEndpoint()
-  @Get('google/redirect')
-  @UseGuards(GoogleAuthGuard)
-  @Redirect('/api/v1')
-  async handleGoogleRedirect(
-    @Request() req: Req,
+  @Post('google-auth')
+  @HttpCode(HttpStatus.OK)
+  async authViaGoogle(
+    @Body() googleAuthCode: GoogleAuthDto,
     @Response({ passthrough: true }) res: Res,
-  ) {
-    const user: User = req.user as User;
-
-    const userId: number = user.id;
-
-    const refreshToken: string = await this.tokensService.createRefreshToken({
-      userId,
-      uuid: crypto.randomUUID(),
-    });
-
-    const refreshTokenPayload: RefreshTokenPayloadType =
-      this.tokensService.getTokenPayload(refreshToken);
-
-    const refreshTokenExpiresAtDate: Date = new Date(
-      refreshTokenPayload.exp * 1000,
+  ): Promise<SideAuthResponseType> {
+    return this.commandBus.execute(
+      new GoogleAuthCommand({ code: googleAuthCode, res }),
     );
-
-    await this.userRepository.createUserSession({
-      userId,
-      refreshTokenUuid: refreshTokenPayload.uuid,
-      expiresAt: refreshTokenExpiresAtDate,
-    });
-
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
   }
 
   @Post('github-auth')
@@ -286,48 +250,4 @@ export class AuthController {
 
     return userInfo;
   }
-
-  // @ApiExcludeEndpoint()
-  // @Get('github')
-  // @UseGuards(GithubAuthGuard)
-  // async handleGithubAuth() {
-  //   return 'github auth';
-  // }
-
-  // @ApiExcludeEndpoint()
-  // @Get('github/redirect')
-  // @UseGuards(GithubAuthGuard)
-  // @Redirect('/api/v1')
-  // async handleGithubRedirect(
-  //   @Request() req: Req,
-  //   @Response({ passthrough: true }) res: Res,
-  // ) {
-  //   const user: User = req.user as User;
-  //
-  //   const userId: number = user.id;
-  //
-  //   const refreshToken: string = await this.tokensService.createRefreshToken({
-  //     userId,
-  //     uuid: crypto.randomUUID(),
-  //   });
-  //
-  //   const refreshTokenPayload: RefreshTokenPayloadType =
-  //     this.tokensService.getTokenPayload(refreshToken);
-  //
-  //   const refreshTokenExpiresAtDate: Date = new Date(
-  //     refreshTokenPayload.exp * 1000,
-  //   );
-  //
-  //   await this.userRepository.createUserSession({
-  //     userId,
-  //     refreshTokenUuid: refreshTokenPayload.uuid,
-  //     expiresAt: refreshTokenExpiresAtDate,
-  //   });
-  //
-  //   res.cookie(refreshTokenCookieProp, refreshToken, {
-  //     httpOnly: true,
-  //     secure: true,
-  //     expires: refreshTokenExpiresAtDate,
-  //   });
-  // }
 }

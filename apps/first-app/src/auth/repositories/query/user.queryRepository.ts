@@ -8,10 +8,13 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class UserQueryRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  async getUserByEmail(email: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { email } });
+  async getUserByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: { userEmailInfo: true },
+    });
   }
 
   async getUserChangePasswordRequestByCode(data: {

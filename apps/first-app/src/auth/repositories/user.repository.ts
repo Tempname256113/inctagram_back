@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Providers, User, UserEmailInfo, UserSession } from '@prisma/client';
-import { UserChangePasswordRequest } from '@prisma/client';
+import {
+  Providers,
+  UserChangePasswordRequest,
+  UserEmailInfo,
+  UserSession,
+} from '@prisma/client';
 import { PrismaService } from '@shared/database/prisma.service';
 
 @Injectable()
@@ -19,7 +23,7 @@ export class UserRepository {
       registrationConfirmCode?: string;
       emailIsConfirmed: boolean;
     };
-  }): Promise<User> {
+  }) {
     const { username, email, password = null } = userCreateDTO.user;
 
     const {
@@ -43,6 +47,7 @@ export class UserRepository {
           },
         },
       },
+      include: { userEmailInfo: true },
     });
 
     return newUser;
