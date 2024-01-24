@@ -7,7 +7,7 @@ import {
 
 @Injectable()
 export class UserQueryRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async getUserByEmail(email: string) {
     return this.prisma.user.findUnique({
