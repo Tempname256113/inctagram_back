@@ -1,5 +1,4 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
-import { GithubAuthDto } from '../../dto/githubAuth.dto';
 import { Inject, UnauthorizedException } from '@nestjs/common';
 import authConfig from '@shared/config/auth.config.service';
 import { ConfigType } from '@nestjs/config';
@@ -10,26 +9,17 @@ import { TokensService } from '../../utils/tokens.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import axios from 'axios';
 import { Response } from 'express';
-import * as crypto from 'crypto';
-import { RefreshTokenPayloadType } from '../../types/tokens.models';
-import { refreshTokenCookieProp } from '../../variables/refreshToken.variable';
+import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
+import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
 
 export class GithubAuthCommand implements ICommand {
-  constructor(
-    public readonly githubCode: GithubAuthDto,
-    public readonly res: Response,
-  ) {}
+  constructor(public readonly data: { githubCode: string; res: Response }) {}
 }
-
-export type GithubAuthResponseType = {
-  userId: number;
-  username: string;
-  accessToken: string;
-};
 
 @CommandHandler(GithubAuthCommand)
 export class GithubAuthHandler
-  implements ICommandHandler<GithubAuthCommand, GithubAuthResponseType>
+  extends SideAuthCommonFunctions
+  implements ICommandHandler<GithubAuthCommand, SideAuthResponseType>
 {
   constructor(
     @Inject(authConfig.KEY)
@@ -38,20 +28,27 @@ export class GithubAuthHandler
     private readonly userRepository: UserRepository,
     private readonly tokensService: TokensService,
     private readonly nodemailerService: NodemailerService,
-  ) {}
+  ) {
+    super({
+      userQueryRepository,
+      userRepository,
+      nodemailerService,
+      tokensService,
+    });
+  }
 
-  async execute(command: GithubAuthCommand): Promise<GithubAuthResponseType> {
+  async execute(command: GithubAuthCommand): Promise<SideAuthResponseType> {
     const {
-      githubCode: { code: githubCode },
-      res,
+      data: { githubCode, res },
     } = command;
 
     const userInfoFromGithub = await this.getUserInfoFromGithub(githubCode);
 
-    const userFromDB = await this.getUserFromDB(
-      userInfoFromGithub.userEmail,
-      userInfoFromGithub.username,
-    );
+    const userFromDB = await this.getUserFromDB({
+      userEmail: userInfoFromGithub.userEmail,
+      username: userInfoFromGithub.username,
+      provider: Providers.Github,
+    });
 
     await this.createUserSession(userFromDB.id, res);
 
@@ -118,53 +115,5 @@ export class GithubAuthHandler
       userEmail: userEmails[0].email,
       username: userInfo.name ?? userInfo.login,
     };
-  }
-
-  async getUserFromDB(userEmail: string, username: string) {
-    let user = await this.userQueryRepository.getUserByEmail(userEmail);
-
-    if (!user) {
-      user = await this.userRepository.createUser({
-        user: { email: userEmail, username },
-        emailInfo: { provider: Providers.Github, emailIsConfirmed: true },
-      });
-
-      this.nodemailerService.sendRegistrationSuccessfulMessage(user.email);
-    }
-
-    if (user.userEmailInfo.provider !== Providers.Github) {
-      await this.userRepository.updateUserEmailInfoByUserId(user.id, {
-        provider: Providers.Github,
-      });
-    }
-
-    return user;
-  }
-
-  async createUserSession(userId: number, res: Response): Promise<void> {
-    const refreshToken: string = await this.tokensService.createRefreshToken({
-      userId,
-      uuid: crypto.randomUUID(),
-    });
-
-    const refreshTokenPayload: RefreshTokenPayloadType =
-      this.tokensService.getTokenPayload(refreshToken);
-
-    // так как в JWT токене время в секундах, то его надо перевести в миллисекунды
-    const refreshTokenExpiresAtDate: Date = new Date(
-      refreshTokenPayload.exp * 1000,
-    );
-
-    await this.userRepository.createUserSession({
-      userId,
-      refreshTokenUuid: refreshTokenPayload.uuid,
-      expiresAt: refreshTokenExpiresAtDate,
-    });
-
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
   }
 }

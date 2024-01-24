@@ -1,5 +1,4 @@
 import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
-import { GoogleAuthDto } from '../../dto/googleAuth.dto';
 import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
 import { Inject, UnauthorizedException } from '@nestjs/common';
 import authConfig from '@shared/config/auth.config.service';
@@ -14,7 +13,7 @@ import { Providers } from '@prisma/client';
 import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
 
 export class GoogleAuthCommand implements ICommand {
-  constructor(public readonly data: { code: GoogleAuthDto; res: Res }) {}
+  constructor(public readonly data: { code: string; res: Res }) {}
 }
 
 @CommandHandler(GoogleAuthCommand)
@@ -40,10 +39,7 @@ export class GoogleAuthHandler
 
   async execute(command: GoogleAuthCommand): Promise<SideAuthResponseType> {
     const {
-      data: {
-        code: { code: googleCode },
-        res,
-      },
+      data: { code: googleCode, res },
     } = command;
 
     const userInfoFromGoogle = await this.getUserInfoFromGoogle(googleCode);
