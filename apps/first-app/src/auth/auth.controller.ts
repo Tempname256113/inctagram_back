@@ -19,10 +19,9 @@ import { RefreshTokenPayloadType } from './types/tokens.models';
 import { UserRepository } from './repositories/user.repository';
 import { Cookies } from './decorators/cookies.decorator';
 import { Response as Res } from 'express';
-import * as crypto from 'crypto';
 import { ApiTags } from '@nestjs/swagger';
 import {
-  GithubAuthRouteSwaggerDescription,
+  SideAuthRouteSwaggerDescription,
   LoginRouteSwaggerDescription,
   LogoutRouteSwaggerDescription,
   PasswordRecoveryRequestRouteSwaggerDescription,
@@ -31,19 +30,15 @@ import {
   UpdateTokensPairRouteSwaggerDescription,
 } from '@swagger/auth';
 import {
+  GithubAuthCommand,
+  GoogleAuthCommand,
   LoginCommand,
   PasswordRecoveryCommand,
   PasswordRecoveryRequestCommand,
   RegistrationCommand,
 } from '@commands/auth';
-import { GithubAuthDto } from './dto/githubAuth.dto';
-import {
-  GithubAuthCommand,
-  GithubUserInfo,
-} from './application/commandHandlers/githubAuth.handler';
-import { GoogleAuthDto } from './dto/googleAuth.dto';
-import { GoogleAuthCommand } from './application/commandHandlers/googleAuth.handler';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
+import { SideAuthDto } from './dto/sideAuth.dto';
 
 @Controller('auth')
 @ApiTags('auth controllers')
@@ -203,51 +198,25 @@ export class AuthController {
 
   @Post('google-auth')
   @HttpCode(HttpStatus.OK)
+  @SideAuthRouteSwaggerDescription()
   async authViaGoogle(
-    @Body() googleAuthCode: GoogleAuthDto,
+    @Body() googleAuthCode: SideAuthDto,
     @Response({ passthrough: true }) res: Res,
   ): Promise<SideAuthResponseType> {
     return this.commandBus.execute(
-      new GoogleAuthCommand({ code: googleAuthCode, res }),
+      new GoogleAuthCommand({ code: googleAuthCode.code, res }),
     );
   }
 
   @Post('github-auth')
   @HttpCode(HttpStatus.OK)
-  @GithubAuthRouteSwaggerDescription()
+  @SideAuthRouteSwaggerDescription()
   async authViaGithub(
-    @Body() githubAuthCode: GithubAuthDto,
+    @Body() githubAuthCode: SideAuthDto,
     @Response({ passthrough: true }) res: Res,
-  ): Promise<GithubUserInfo> {
-    const userInfo: GithubUserInfo = await this.commandBus.execute(
-      new GithubAuthCommand(githubAuthCode),
+  ): Promise<SideAuthResponseType> {
+    return this.commandBus.execute(
+      new GithubAuthCommand({ githubCode: githubAuthCode.code, res }),
     );
-
-    const refreshToken: string = await this.tokensService.createRefreshToken({
-      userId: userInfo.userId,
-      uuid: crypto.randomUUID(),
-    });
-
-    const refreshTokenPayload: RefreshTokenPayloadType =
-      this.tokensService.getTokenPayload(refreshToken);
-
-    // так как в JWT токене время в секундах, то его надо перевести в миллисекунды
-    const refreshTokenExpiresAtDate: Date = new Date(
-      refreshTokenPayload.exp * 1000,
-    );
-
-    await this.userRepository.createUserSession({
-      userId: userInfo.userId,
-      refreshTokenUuid: refreshTokenPayload.uuid,
-      expiresAt: refreshTokenExpiresAtDate,
-    });
-
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
-
-    return userInfo;
   }
 }

@@ -4,8 +4,6 @@ import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { ValidationError } from 'class-validator';
 import * as _ from 'lodash';
-import * as session from 'express-session';
-import * as passport from 'passport';
 import { SwaggerConfig } from './swagger.config';
 
 async function bootstrap() {
@@ -20,16 +18,6 @@ async function bootstrap() {
 
   new SwaggerConfig(app).apply();
 
-  app.use(
-    session({
-      secret: 'topsecret',
-      saveUninitialized: false,
-      resave: false,
-      cookie: { httpOnly: true, secure: true },
-    }),
-  );
-  app.use(passport.initialize());
-  app.use(passport.session());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

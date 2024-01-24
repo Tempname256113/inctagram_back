@@ -4,7 +4,6 @@ import {
   UserChangePasswordRequest,
   UserChangePasswordRequestStates,
 } from '@prisma/client';
-import { User } from '@prisma/client';
 
 @Injectable()
 export class UserQueryRepository {

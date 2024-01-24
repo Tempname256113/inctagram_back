@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GithubAuthDtoSwagger {
+export class SideAuthResponseDtoSwagger {
   @ApiProperty({
-    description: 'Code from github',
+    description: 'Code from api',
     example: 'temp256113',
     type: 'string',
     required: true,
