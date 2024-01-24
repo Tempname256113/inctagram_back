@@ -7,7 +7,7 @@ import {
 
 @Injectable()
 export class UserQueryRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getUserByEmail(email: string) {
     return this.prisma.user.findUnique({
@@ -21,33 +21,15 @@ export class UserQueryRepository {
     state: UserChangePasswordRequestStates;
     deleted?: boolean;
   }): Promise<UserChangePasswordRequest | null> {
-    const { recoveryCode, state, deleted = 'default' } = data;
+    const { recoveryCode, state, deleted = false } = data;
 
-    if (deleted === 'default') {
-      return this.prisma.userChangePasswordRequest.findFirst({
-        where: {
-          passwordRecoveryCode: recoveryCode,
-          state,
-        },
-      });
-    }
-
-    if (data.deleted) {
-      return this.prisma.userChangePasswordRequest.findFirst({
-        where: {
-          passwordRecoveryCode: recoveryCode,
-          state,
-        },
-      });
-    } else {
-      return this.prisma.userChangePasswordRequest.findFirst({
-        where: {
-          passwordRecoveryCode: recoveryCode,
-          state,
-          deletedAt: { not: null },
-        },
-      });
-    }
+    return this.prisma.userChangePasswordRequest.findFirst({
+      where: {
+        passwordRecoveryCode: recoveryCode,
+        state,
+        deletedAt: deleted ? { not: null } : null,
+      },
+    });
   }
 
   async getUserByEmailOrUsernameWithFullInfo(data: {
