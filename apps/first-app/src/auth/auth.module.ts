@@ -12,10 +12,6 @@ import { UserRepository } from './repositories/user.repository';
 import { UserQueryRepository } from './repositories/query/user.queryRepository';
 import { PrismaService } from '@shared/database/prisma.service';
 import { PasswordRecoveryRequestHandler } from './application/commandHandlers/passwordRecovery/passwordRecoveryRequest.handler';
-import { GoogleStrategy } from './passportStrategies/google.strategy';
-import { SessionSerializer } from './passportStrategies/session.serializer';
-import { PassportModule } from '@nestjs/passport';
-import { GithubStrategy } from './passportStrategies/github.strategy';
 import { GithubAuthHandler } from './application/commandHandlers/githubAuth.handler';
 import { GoogleAuthHandler } from './application/commandHandlers/googleAuth.handler';
 
@@ -33,7 +29,7 @@ const repos = [UserRepository];
 const queryRepos = [UserQueryRepository];
 
 @Module({
-  imports: [CqrsModule, JwtModule, PassportModule.register({ session: true })],
+  imports: [CqrsModule, JwtModule],
   controllers: [AuthController],
   providers: [
     ...commandHandlers,
@@ -43,9 +39,6 @@ const queryRepos = [UserQueryRepository];
     NodemailerService,
     BcryptService,
     PrismaService,
-    GoogleStrategy,
-    GithubStrategy,
-    SessionSerializer,
   ],
 })
 export class AuthModule {}
