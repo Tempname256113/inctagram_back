@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBody,
-  ApiCreatedResponse,
+  ApiOkResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AccessTokenResponseDtoSwagger } from '../../dto/tokens.dto.swagger';
@@ -9,7 +9,7 @@ import { UserLoginDtoSwagger } from '../../dto/user.dto.swagger';
 
 export const LoginRouteSwaggerDescription = () => {
   return applyDecorators(
-    ApiCreatedResponse({
+    ApiOkResponse({
       description: 'Successful login',
       type: AccessTokenResponseDtoSwagger,
     }),

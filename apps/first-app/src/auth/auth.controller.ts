@@ -9,33 +9,32 @@ import {
 } from '@nestjs/common';
 import { UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
-import { TokensService } from './utils/tokens.service';
 import { refreshTokenCookieProp } from './variables/refreshToken.variable';
 import {
   UserPasswordRecoveryDTO,
   UserPasswordRecoveryRequestDTO,
 } from './dto/password-recovery.dto';
-import { RefreshTokenPayloadType } from './types/tokens.models';
-import { UserRepository } from './repositories/user.repository';
 import { Cookies } from './decorators/cookies.decorator';
 import { Response as Res } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import {
-  SideAuthRouteSwaggerDescription,
   LoginRouteSwaggerDescription,
   LogoutRouteSwaggerDescription,
   PasswordRecoveryRequestRouteSwaggerDescription,
   PasswordRecoveryRouteSwaggerDescription,
   RegisterRouteSwaggerDescription,
+  SideAuthRouteSwaggerDescription,
   UpdateTokensPairRouteSwaggerDescription,
 } from '@swagger/auth';
 import {
   GithubAuthCommand,
   GoogleAuthCommand,
   LoginCommand,
+  LogoutCommand,
   PasswordRecoveryCommand,
   PasswordRecoveryRequestCommand,
   RegistrationCommand,
+  UpdateTokensPairCommand,
 } from '@commands/auth';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
@@ -43,11 +42,7 @@ import { SideAuthDto } from './dto/sideAuth.dto';
 @Controller('auth')
 @ApiTags('auth controllers')
 export class AuthController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly tokensService: TokensService,
-    private readonly userRepository: UserRepository,
-  ) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -65,39 +60,10 @@ export class AuthController {
   }
 
   @Post('login')
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.OK)
   @LoginRouteSwaggerDescription()
-  async login(
-    @Body() userLoginDTO: UserLoginDTO,
-    @Response({ passthrough: true }) res: Res,
-  ) {
-    const userId: number | null = await this.commandBus.execute(
-      new LoginCommand(userLoginDTO),
-    );
-
-    const { accessToken, refreshToken } =
-      await this.tokensService.createTokensPair({ userId });
-
-    const refreshTokenPayload: RefreshTokenPayloadType =
-      this.tokensService.getTokenPayload(refreshToken);
-
-    const refreshTokenExpiresAtDate: Date = new Date(
-      refreshTokenPayload.exp * 1000,
-    );
-
-    await this.userRepository.createUserSession({
-      userId,
-      refreshTokenUuid: refreshTokenPayload.uuid,
-      expiresAt: refreshTokenExpiresAtDate,
-    });
-
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
-
-    return { accessToken };
+  async login(@Body() userLoginDTO: UserLoginDTO, @Response() res: Res) {
+    await this.commandBus.execute(new LoginCommand({ userLoginDTO, res }));
   }
 
   @Post('update-tokens-pair')
@@ -105,7 +71,7 @@ export class AuthController {
   @UpdateTokensPairRouteSwaggerDescription()
   async updateTokensPair(
     @Cookies(refreshTokenCookieProp) refreshToken: string,
-    @Response({ passthrough: true }) res: Res,
+    @Response() res: Res,
   ) {
     if (!refreshToken) {
       throw new UnauthorizedException(
@@ -113,44 +79,9 @@ export class AuthController {
       );
     }
 
-    const refreshTokenPayload: RefreshTokenPayloadType | null =
-      await this.tokensService.verifyRefreshToken(refreshToken);
-
-    if (!refreshTokenPayload) {
-      throw new UnauthorizedException('Refresh token is invalid');
-    }
-
-    const newTokensPair = await this.tokensService.createTokensPair({
-      userId: refreshTokenPayload.userId,
-      uuid: refreshTokenPayload.uuid,
-    });
-
-    const newRefreshTokenPayload: RefreshTokenPayloadType =
-      this.tokensService.getTokenPayload(newTokensPair.refreshToken);
-
-    const newRefreshTokenExpiresAtDate: Date = new Date(
-      newRefreshTokenPayload.exp * 1000,
+    await this.commandBus.execute(
+      new UpdateTokensPairCommand({ refreshToken, res }),
     );
-
-    const updatedSessionsAmount = await this.userRepository.updateUserSession({
-      userId: newRefreshTokenPayload.userId,
-      currentRefreshTokenUuid: refreshTokenPayload.uuid,
-      newRefreshTokenUuid: newRefreshTokenPayload.uuid,
-      refreshTokenExpiresAt: newRefreshTokenExpiresAtDate,
-    });
-
-    // если не обновилась ни одна сессия значит она не найдена. если не найдена значит рефреш токен не действительный
-    if (updatedSessionsAmount.count < 1) {
-      throw new UnauthorizedException('Refresh token is invalid');
-    }
-
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: newRefreshTokenExpiresAtDate,
-    });
-
-    return { accessToken: newTokensPair.accessToken };
   }
 
   @Post('logout')
@@ -161,17 +92,7 @@ export class AuthController {
       throw new UnauthorizedException('Provide refresh token for logout');
     }
 
-    const refreshTokenPayload: RefreshTokenPayloadType | null =
-      await this.tokensService.verifyRefreshToken(refreshToken);
-
-    if (!refreshTokenPayload) {
-      throw new UnauthorizedException('Refresh token is invalid');
-    }
-
-    await this.userRepository.deleteUserSession({
-      userId: refreshTokenPayload.userId,
-      refreshTokenUuid: refreshTokenPayload.uuid,
-    });
+    await this.commandBus.execute(new LogoutCommand(refreshToken));
 
     return 'Logout success';
   }
@@ -204,7 +125,7 @@ export class AuthController {
     @Response({ passthrough: true }) res: Res,
   ): Promise<SideAuthResponseType> {
     return this.commandBus.execute(
-      new GoogleAuthCommand({ code: googleAuthCode.code, res }),
+      new GoogleAuthCommand({ googleCode: googleAuthCode.code, res }),
     );
   }
 

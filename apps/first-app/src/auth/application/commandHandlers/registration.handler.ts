@@ -1,4 +1,4 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserRegisterDTO } from '../../dto/user.dto';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
@@ -8,7 +8,7 @@ import { ConflictException } from '@nestjs/common';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 
-export class RegistrationCommand implements ICommand {
+export class RegistrationCommand {
   constructor(public readonly userRegisterDTO: UserRegisterDTO) {}
 }
 

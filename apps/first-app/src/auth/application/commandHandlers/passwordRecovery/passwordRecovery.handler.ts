@@ -1,4 +1,4 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException } from '@nestjs/common';
 import { UserChangePasswordRequestStates } from '@prisma/client';
 import { UserPasswordRecoveryDTO } from '../../../dto/password-recovery.dto';
@@ -10,7 +10,7 @@ import {
 import { UserRepository } from '../../../repositories/user.repository';
 import { BcryptService } from '../../../utils/bcrypt.service';
 
-export class PasswordRecoveryCommand implements ICommand {
+export class PasswordRecoveryCommand {
   constructor(public readonly passwordRecoveryDTO: UserPasswordRecoveryDTO) {}
 }
 

@@ -1,44 +1,95 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserLoginDTO } from '../../dto/user.dto';
-import { User } from '@prisma/client';
-import { UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from '@shared/database/prisma.service';
+import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { USER_ERRORS } from '../../variables/validationErrors.messages';
+import { Response } from 'express';
+import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
+import { TokensService } from '../../utils/tokens.service';
+import { RefreshTokenPayloadType } from '../../types/tokens.models';
+import { refreshTokenCookieProp } from '../../variables/refreshToken.variable';
+import * as crypto from 'crypto';
+import { UserRepository } from '../../repositories/user.repository';
 
-export class LoginCommand implements ICommand {
-  constructor(public readonly userLoginDTO: UserLoginDTO) {}
+export class LoginCommand {
+  constructor(
+    public readonly data: { userLoginDTO: UserLoginDTO; res: Response },
+  ) {}
 }
 
 // возвращает id юзера если логин прошел успешно
 @CommandHandler(LoginCommand)
-export class LoginHandler implements ICommandHandler<LoginCommand, number> {
+export class LoginHandler implements ICommandHandler<LoginCommand, void> {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly userRepository: UserRepository,
+    private readonly userQueryRepository: UserQueryRepository,
     private readonly bcryptService: BcryptService,
+    private readonly tokensService: TokensService,
   ) {}
 
-  async execute(command: LoginCommand): Promise<number> {
-    const { userLoginDTO } = command;
+  async execute(command: LoginCommand): Promise<void> {
+    const {
+      data: { userLoginDTO, res },
+    } = command;
 
-    const foundedUser: User | null = await this.prisma.user.findUnique({
-      where: { email: userLoginDTO.email },
-    });
+    const user = await this.getUser(userLoginDTO);
 
-    if (!foundedUser) {
+    await this.createSession({ userId: user.id, res });
+
+    const accessToken: string = await this.tokensService.createAccessToken(
+      user.id,
+    );
+
+    res.status(HttpStatus.OK).send({ accessToken });
+  }
+
+  async getUser(userLoginDTO: UserLoginDTO) {
+    const foundUser = await this.userQueryRepository.getUserByEmail(
+      userLoginDTO.email,
+    );
+
+    if (!foundUser) {
       throw new UnauthorizedException(USER_ERRORS.EMAIL_OR_PASSWORD_INCORRECT);
     }
 
     const passwordIsCorrect: boolean =
       await this.bcryptService.compareHashAndPassword({
         password: userLoginDTO.password,
-        hash: foundedUser.password,
+        hash: foundUser.password,
       });
 
     if (!passwordIsCorrect) {
       throw new UnauthorizedException(USER_ERRORS.EMAIL_OR_PASSWORD_INCORRECT);
     }
 
-    return foundedUser.id;
+    return foundUser;
+  }
+
+  async createSession(data: { userId: number; res: Response }) {
+    const { userId, res } = data;
+
+    const refreshToken: string = await this.tokensService.createRefreshToken({
+      userId,
+      uuid: crypto.randomUUID(),
+    });
+
+    const refreshTokenPayload: RefreshTokenPayloadType =
+      this.tokensService.getTokenPayload(refreshToken);
+
+    const refreshTokenExpiresAtDate: Date = new Date(
+      refreshTokenPayload.exp * 1000,
+    );
+
+    await this.userRepository.createUserSession({
+      userId,
+      refreshTokenUuid: refreshTokenPayload.uuid,
+      expiresAt: refreshTokenExpiresAtDate,
+    });
+
+    res.cookie(refreshTokenCookieProp, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      expires: refreshTokenExpiresAtDate,
+    });
   }
 }
