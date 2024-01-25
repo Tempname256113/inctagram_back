@@ -9,47 +9,40 @@ import {
 } from '@nestjs/common';
 import { UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
-import { TokensService } from './utils/tokens.service';
 import { refreshTokenCookieProp } from './variables/refreshToken.variable';
 import {
   UserPasswordRecoveryDTO,
   UserPasswordRecoveryRequestDTO,
 } from './dto/password-recovery.dto';
-import { RefreshTokenPayloadType } from './types/tokens.models';
-import { UserRepository } from './repositories/user.repository';
 import { Cookies } from './decorators/cookies.decorator';
 import { Response as Res } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import {
-  SideAuthRouteSwaggerDescription,
   LoginRouteSwaggerDescription,
   LogoutRouteSwaggerDescription,
   PasswordRecoveryRequestRouteSwaggerDescription,
   PasswordRecoveryRouteSwaggerDescription,
   RegisterRouteSwaggerDescription,
+  SideAuthRouteSwaggerDescription,
   UpdateTokensPairRouteSwaggerDescription,
 } from '@swagger/auth';
 import {
   GithubAuthCommand,
   GoogleAuthCommand,
   LoginCommand,
+  LogoutCommand,
   PasswordRecoveryCommand,
   PasswordRecoveryRequestCommand,
   RegistrationCommand,
+  UpdateTokensPairCommand,
 } from '@commands/auth';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
-import { LogoutCommand } from './application/commandHandlers/logout.handler';
-import { UpdateTokensPairCommand } from './application/commandHandlers/updateTokensPair.handler';
 
 @Controller('auth')
 @ApiTags('auth controllers')
 export class AuthController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly tokensService: TokensService,
-    private readonly userRepository: UserRepository,
-  ) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -67,39 +60,10 @@ export class AuthController {
   }
 
   @Post('login')
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.OK)
   @LoginRouteSwaggerDescription()
-  async login(
-    @Body() userLoginDTO: UserLoginDTO,
-    @Response({ passthrough: true }) res: Res,
-  ) {
-    const userId: number | null = await this.commandBus.execute(
-      new LoginCommand(userLoginDTO),
-    );
-
-    const { accessToken, refreshToken } =
-      await this.tokensService.createTokensPair({ userId });
-
-    const refreshTokenPayload: RefreshTokenPayloadType =
-      this.tokensService.getTokenPayload(refreshToken);
-
-    const refreshTokenExpiresAtDate: Date = new Date(
-      refreshTokenPayload.exp * 1000,
-    );
-
-    await this.userRepository.createUserSession({
-      userId,
-      refreshTokenUuid: refreshTokenPayload.uuid,
-      expiresAt: refreshTokenExpiresAtDate,
-    });
-
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
-
-    return { accessToken };
+  async login(@Body() userLoginDTO: UserLoginDTO, @Response() res: Res) {
+    await this.commandBus.execute(new LoginCommand({ userLoginDTO, res }));
   }
 
   @Post('update-tokens-pair')

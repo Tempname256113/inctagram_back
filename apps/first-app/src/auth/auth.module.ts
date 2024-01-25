@@ -15,6 +15,7 @@ import { PasswordRecoveryRequestHandler } from './application/commandHandlers/pa
 import { GithubAuthHandler } from './application/commandHandlers/githubAuth.handler';
 import { GoogleAuthHandler } from './application/commandHandlers/googleAuth.handler';
 import { LogoutHandler } from './application/commandHandlers/logout.handler';
+import { UpdateTokensPairHandler } from './application/commandHandlers/updateTokensPair.handler';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -24,6 +25,7 @@ const commandHandlers = [
   PasswordRecoveryHandler,
   GithubAuthHandler,
   GoogleAuthHandler,
+  UpdateTokensPairHandler,
 ];
 
 const repos = [UserRepository];

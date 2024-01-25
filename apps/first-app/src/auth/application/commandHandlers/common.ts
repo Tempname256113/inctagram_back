@@ -4,12 +4,16 @@ import { LoginCommand } from './login.handler';
 import { RegistrationCommand } from './registration.handler';
 import { GithubAuthCommand } from './githubAuth.handler';
 import { GoogleAuthCommand } from './googleAuth.handler';
+import { LogoutCommand } from './logout.handler';
+import { UpdateTokensPairCommand } from './updateTokensPair.handler';
 
 export {
   PasswordRecoveryRequestCommand,
   PasswordRecoveryCommand,
   RegistrationCommand,
+  LogoutCommand,
   LoginCommand,
   GithubAuthCommand,
   GoogleAuthCommand,
+  UpdateTokensPairCommand,
 };
