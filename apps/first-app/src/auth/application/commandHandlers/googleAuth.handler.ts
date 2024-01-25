@@ -13,7 +13,7 @@ import { Providers } from '@prisma/client';
 import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
 
 export class GoogleAuthCommand implements ICommand {
-  constructor(public readonly data: { code: string; res: Res }) {}
+  constructor(public readonly data: { googleCode: string; res: Res }) {}
 }
 
 @CommandHandler(GoogleAuthCommand)
@@ -39,7 +39,7 @@ export class GoogleAuthHandler
 
   async execute(command: GoogleAuthCommand): Promise<SideAuthResponseType> {
     const {
-      data: { code: googleCode, res },
+      data: { googleCode, res },
     } = command;
 
     const userInfoFromGoogle = await this.getUserInfoFromGoogle(googleCode);

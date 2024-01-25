@@ -39,6 +39,7 @@ import {
 } from '@commands/auth';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
+import { LogoutCommand } from './application/commandHandlers/logout.handler';
 
 @Controller('auth')
 @ApiTags('auth controllers')
@@ -161,17 +162,7 @@ export class AuthController {
       throw new UnauthorizedException('Provide refresh token for logout');
     }
 
-    const refreshTokenPayload: RefreshTokenPayloadType | null =
-      await this.tokensService.verifyRefreshToken(refreshToken);
-
-    if (!refreshTokenPayload) {
-      throw new UnauthorizedException('Refresh token is invalid');
-    }
-
-    await this.userRepository.deleteUserSession({
-      userId: refreshTokenPayload.userId,
-      refreshTokenUuid: refreshTokenPayload.uuid,
-    });
+    await this.commandBus.execute(new LogoutCommand(refreshToken));
 
     return 'Logout success';
   }
@@ -204,7 +195,7 @@ export class AuthController {
     @Response({ passthrough: true }) res: Res,
   ): Promise<SideAuthResponseType> {
     return this.commandBus.execute(
-      new GoogleAuthCommand({ code: googleAuthCode.code, res }),
+      new GoogleAuthCommand({ googleCode: googleAuthCode.code, res }),
     );
   }
 

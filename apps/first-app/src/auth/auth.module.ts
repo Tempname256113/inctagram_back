@@ -14,10 +14,12 @@ import { PrismaService } from '@shared/database/prisma.service';
 import { PasswordRecoveryRequestHandler } from './application/commandHandlers/passwordRecovery/passwordRecoveryRequest.handler';
 import { GithubAuthHandler } from './application/commandHandlers/githubAuth.handler';
 import { GoogleAuthHandler } from './application/commandHandlers/googleAuth.handler';
+import { LogoutHandler } from './application/commandHandlers/logout.handler';
 
 const commandHandlers = [
   RegistrationHandler,
   LoginHandler,
+  LogoutHandler,
   PasswordRecoveryRequestHandler,
   PasswordRecoveryHandler,
   GithubAuthHandler,
