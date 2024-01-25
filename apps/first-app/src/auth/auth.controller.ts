@@ -40,6 +40,7 @@ import {
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
 import { LogoutCommand } from './application/commandHandlers/logout.handler';
+import { UpdateTokensPairCommand } from './application/commandHandlers/updateTokensPair.handler';
 
 @Controller('auth')
 @ApiTags('auth controllers')
@@ -106,7 +107,7 @@ export class AuthController {
   @UpdateTokensPairRouteSwaggerDescription()
   async updateTokensPair(
     @Cookies(refreshTokenCookieProp) refreshToken: string,
-    @Response({ passthrough: true }) res: Res,
+    @Response() res: Res,
   ) {
     if (!refreshToken) {
       throw new UnauthorizedException(
@@ -114,44 +115,9 @@ export class AuthController {
       );
     }
 
-    const refreshTokenPayload: RefreshTokenPayloadType | null =
-      await this.tokensService.verifyRefreshToken(refreshToken);
-
-    if (!refreshTokenPayload) {
-      throw new UnauthorizedException('Refresh token is invalid');
-    }
-
-    const newTokensPair = await this.tokensService.createTokensPair({
-      userId: refreshTokenPayload.userId,
-      uuid: refreshTokenPayload.uuid,
-    });
-
-    const newRefreshTokenPayload: RefreshTokenPayloadType =
-      this.tokensService.getTokenPayload(newTokensPair.refreshToken);
-
-    const newRefreshTokenExpiresAtDate: Date = new Date(
-      newRefreshTokenPayload.exp * 1000,
+    await this.commandBus.execute(
+      new UpdateTokensPairCommand({ refreshToken, res }),
     );
-
-    const updatedSessionsAmount = await this.userRepository.updateUserSession({
-      userId: newRefreshTokenPayload.userId,
-      currentRefreshTokenUuid: refreshTokenPayload.uuid,
-      newRefreshTokenUuid: newRefreshTokenPayload.uuid,
-      refreshTokenExpiresAt: newRefreshTokenExpiresAtDate,
-    });
-
-    // если не обновилась ни одна сессия значит она не найдена. если не найдена значит рефреш токен не действительный
-    if (updatedSessionsAmount.count < 1) {
-      throw new UnauthorizedException('Refresh token is invalid');
-    }
-
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: newRefreshTokenExpiresAtDate,
-    });
-
-    return { accessToken: newTokensPair.accessToken };
   }
 
   @Post('logout')
