@@ -5,6 +5,7 @@ import { PasswordRecoveryRequestRouteSwaggerDescription } from './controllers/au
 import { RegisterRouteSwaggerDescription } from './controllers/auth/register.route.swagger';
 import { UpdateTokensPairRouteSwaggerDescription } from './controllers/auth/updateTokensPair.route.swagger';
 import { SideAuthRouteSwaggerDescription } from './controllers/auth/sideAuth.route.swagger';
+import { RegisterCodeCheckRouteSwaggerDescription } from './controllers/auth/registerCodeCheck.route.swagger';
 
 export {
   LoginRouteSwaggerDescription,
@@ -14,4 +15,5 @@ export {
   RegisterRouteSwaggerDescription,
   UpdateTokensPairRouteSwaggerDescription,
   SideAuthRouteSwaggerDescription,
+  RegisterCodeCheckRouteSwaggerDescription,
 };

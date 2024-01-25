@@ -22,11 +22,13 @@ import {
   LogoutRouteSwaggerDescription,
   PasswordRecoveryRequestRouteSwaggerDescription,
   PasswordRecoveryRouteSwaggerDescription,
+  RegisterCodeCheckRouteSwaggerDescription,
   RegisterRouteSwaggerDescription,
   SideAuthRouteSwaggerDescription,
   UpdateTokensPairRouteSwaggerDescription,
 } from '@swagger/auth';
 import {
+  CheckRegisterCodeCommand,
   GithubAuthCommand,
   GoogleAuthCommand,
   LoginCommand,
@@ -38,6 +40,7 @@ import {
 } from '@commands/auth';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
+import { RegisterCodeDto } from './dto/register.dto';
 
 @Controller('auth')
 @ApiTags('auth controllers')
@@ -57,6 +60,15 @@ export class AuthController {
     );
 
     return `We have sent a link to confirm your email to ${userRegistrationDTO.email}`;
+  }
+
+  @Post('register-code-check')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @RegisterCodeCheckRouteSwaggerDescription()
+  async checkRegisterCode(@Body() registerCode: RegisterCodeDto) {
+    await this.commandBus.execute(
+      new CheckRegisterCodeCommand(registerCode.code),
+    );
   }
 
   @Post('login')
