@@ -1,4 +1,4 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import * as crypto from 'crypto';
 import { add } from 'date-fns';
 import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
@@ -9,7 +9,7 @@ import { USER_ERRORS } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
 import { UserPasswordRecoveryRequestDTO } from '../../../dto/password-recovery.dto';
 
-export class PasswordRecoveryRequestCommand implements ICommand {
+export class PasswordRecoveryRequestCommand {
   constructor(
     public readonly passwordRecoveryRequestDTO: UserPasswordRecoveryRequestDTO,
   ) {}

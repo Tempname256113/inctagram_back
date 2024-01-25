@@ -1,4 +1,4 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, UnauthorizedException } from '@nestjs/common';
 import authConfig from '@shared/config/auth.config.service';
 import { ConfigType } from '@nestjs/config';
@@ -12,7 +12,7 @@ import { Response } from 'express';
 import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
 import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
 
-export class GithubAuthCommand implements ICommand {
+export class GithubAuthCommand {
   constructor(public readonly data: { githubCode: string; res: Response }) {}
 }
 

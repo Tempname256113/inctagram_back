@@ -1,10 +1,10 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { RefreshTokenPayloadType } from '../../types/tokens.models';
 import { UnauthorizedException } from '@nestjs/common';
 import { TokensService } from '../../utils/tokens.service';
 import { UserRepository } from '../../repositories/user.repository';
 
-export class LogoutCommand implements ICommand {
+export class LogoutCommand {
   constructor(public readonly refreshToken: string) {}
 }
 
