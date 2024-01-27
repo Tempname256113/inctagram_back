@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   Providers,
+  User,
   UserChangePasswordRequest,
   UserEmailInfo,
   UserSession,
@@ -53,6 +54,13 @@ export class UserRepository {
     return newUser;
   }
 
+  async updateUserById(
+    userId: number,
+    data: Partial<Omit<User, 'createdAt' | 'updatedAt' | 'id'>>,
+  ) {
+    return this.prisma.user.update({ where: { id: userId }, data });
+  }
+
   async updateUserEmailInfoByUserId(
     userId: number,
     data: Partial<UserEmailInfo>,
@@ -71,6 +79,21 @@ export class UserRepository {
         passwordRecoveryCode: data.passwordRecoveryCode,
         expiresAt: data.expiresAt,
       },
+    });
+  }
+
+  async updateUserChangePasswordRequest(
+    passwordRecoveryRequestId: number,
+    data: Partial<
+      Omit<
+        UserChangePasswordRequest,
+        'createdAt' | 'updatedAt' | 'userId' | 'id'
+      >
+    >,
+  ) {
+    return this.prisma.userChangePasswordRequest.update({
+      where: { id: passwordRecoveryRequestId },
+      data,
     });
   }
 
@@ -129,5 +152,9 @@ export class UserRepository {
     await this.prisma.userSession.deleteMany({
       where: { userId: data.userId, refreshTokenUuid: data.refreshTokenUuid },
     });
+  }
+
+  async deleteAllUserSessions(userId: number) {
+    return this.prisma.userSession.deleteMany({ where: { userId } });
   }
 }

@@ -4,6 +4,7 @@ import { GoneException, NotFoundException } from '@nestjs/common';
 import { isBefore } from 'date-fns';
 import { UserRepository } from '../repositories/user.repository';
 import { NodemailerService } from '../utils/nodemailer.service';
+import { RegisterCodeCheckResponseTypeSwagger } from '../swagger/dto/registerCodeCheckResponseType.swagger';
 
 export class CheckRegisterCodeCommand {
   constructor(public readonly code: string) {}
@@ -35,8 +36,8 @@ export class CheckRegisterCodeHandler
     if (codeIsExpires) {
       throw new GoneException({
         message: 'Provided code is expired',
-        userId: foundUser.id,
-      });
+        userEmail: foundUser.email,
+      } as RegisterCodeCheckResponseTypeSwagger);
     }
 
     await this.userRepository.updateUserEmailInfoByUserId(foundUser.id, {

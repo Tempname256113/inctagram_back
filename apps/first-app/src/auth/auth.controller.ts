@@ -11,7 +11,7 @@ import { UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
 import { CommandBus } from '@nestjs/cqrs';
 import { refreshTokenCookieProp } from './variables/refreshToken.variable';
 import {
-  UserPasswordRecoveryDTO,
+  UserPasswordRecoveryCodeCheckDTO,
   UserPasswordRecoveryRequestDTO,
 } from './dto/passwordRecovery.dto';
 import { Cookies } from './decorators/cookies.decorator';
@@ -26,7 +26,7 @@ import {
   RegisterRouteSwaggerDescription,
   SideAuthRouteSwaggerDescription,
   UpdateTokensPairRouteSwaggerDescription,
-  SendEmailRouteSwaggerDescription,
+  ResendRegisterEmailRouteSwaggerDescription,
 } from '@swagger/auth';
 import {
   CheckRegisterCodeCommand,
@@ -34,16 +34,16 @@ import {
   GoogleAuthCommand,
   LoginCommand,
   LogoutCommand,
-  PasswordRecoveryCommand,
+  PasswordRecoveryCodeCheckCommand,
   PasswordRecoveryRequestCommand,
   RegistrationCommand,
+  ResendRegisterEmailCommand,
   UpdateTokensPairCommand,
 } from '@commands/auth';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
 import { RegisterCodeDto } from './dto/register.dto';
-import { SendEmailDto } from './dto/sendEmail.dto';
-import { SendEmailsCommand } from './application/commandHandlers/sendEmails.handler';
+import { ResendRegisterEmailDto } from './dto/resendRegisterEmail.dto';
 
 @Controller('auth')
 @ApiTags('auth controllers')
@@ -78,13 +78,15 @@ export class AuthController {
     );
   }
 
-  @Post('send-email')
+  @Post('resend-register-email')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @SendEmailRouteSwaggerDescription()
-  async sendEmail(@Body() sendEmailInfo: SendEmailDto): Promise<void> {
-    //   надо будет дописать логику. нужно чтобы с этим роутом можно было присылать на почту сообщения про подтверждение регистрации
-    //   и про смену пароля (если закончился по времени код то надо новый запрос сделать)
-    await this.commandBus.execute(new SendEmailsCommand(sendEmailInfo));
+  @ResendRegisterEmailRouteSwaggerDescription()
+  async sendEmail(
+    @Body() sendEmailInfo: ResendRegisterEmailDto,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new ResendRegisterEmailCommand(sendEmailInfo),
+    );
   }
 
   @Post('login')
@@ -141,14 +143,14 @@ export class AuthController {
     );
   }
 
-  @Post('password-recovery')
-  @HttpCode(HttpStatus.OK)
+  @Post('password-recovery-code-check')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @PasswordRecoveryRouteSwaggerDescription()
   async passwordRecovery(
-    @Body() passwordRecoveryDTO: UserPasswordRecoveryDTO,
+    @Body() passwordRecoveryDTO: UserPasswordRecoveryCodeCheckDTO,
   ): Promise<void> {
     await this.commandBus.execute(
-      new PasswordRecoveryCommand(passwordRecoveryDTO),
+      new PasswordRecoveryCodeCheckCommand(passwordRecoveryDTO),
     );
   }
 

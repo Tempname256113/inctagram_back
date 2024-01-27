@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { BadRequestException } from '@nestjs/common';
+import { GoneException, NotFoundException } from '@nestjs/common';
 import { UserChangePasswordRequestStates } from '@prisma/client';
-import { UserPasswordRecoveryDTO } from '../../../dto/passwordRecovery.dto';
+import { UserPasswordRecoveryCodeCheckDTO } from '../../../dto/passwordRecovery.dto';
 import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
 import {
   AUTH_ERRORS,
@@ -9,14 +9,17 @@ import {
 } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
 import { BcryptService } from '../../../utils/bcrypt.service';
+import { isBefore } from 'date-fns';
 
-export class PasswordRecoveryCommand {
-  constructor(public readonly passwordRecoveryDTO: UserPasswordRecoveryDTO) {}
+export class PasswordRecoveryCodeCheckCommand {
+  constructor(
+    public readonly passwordRecoveryDTO: UserPasswordRecoveryCodeCheckDTO,
+  ) {}
 }
 
-@CommandHandler(PasswordRecoveryCommand)
-export class PasswordRecoveryHandler
-  implements ICommandHandler<PasswordRecoveryCommand, void>
+@CommandHandler(PasswordRecoveryCodeCheckCommand)
+export class PasswordRecoveryCodeCheckHandler
+  implements ICommandHandler<PasswordRecoveryCodeCheckCommand, void>
 {
   constructor(
     private readonly userQueryRepository: UserQueryRepository,
@@ -26,7 +29,7 @@ export class PasswordRecoveryHandler
 
   async execute({
     passwordRecoveryDTO,
-  }: PasswordRecoveryCommand): Promise<void> {
+  }: PasswordRecoveryCodeCheckCommand): Promise<void> {
     const foundChangePasswordRequest =
       await this.userQueryRepository.getPasswordRecoveryRequestByCode({
         recoveryCode: passwordRecoveryDTO.passwordRecoveryCode,
@@ -35,17 +38,23 @@ export class PasswordRecoveryHandler
       });
 
     if (!foundChangePasswordRequest) {
-      throw new BadRequestException(CHANGE_PASSWORD_REQUEST_ERRORS.NOT_FOUND);
+      throw new NotFoundException(CHANGE_PASSWORD_REQUEST_ERRORS.NOT_FOUND);
     }
 
-    if (
-      new Date().getTime() >= foundChangePasswordRequest.expiresAt.getTime()
-    ) {
+    const passwordRecoveryCodeIsExpired = isBefore(
+      foundChangePasswordRequest.expiresAt,
+      new Date(),
+    );
+
+    if (passwordRecoveryCodeIsExpired) {
       await this.userRepository.softDeleteUserChangePasswordRequest(
         foundChangePasswordRequest.id,
       );
 
-      throw new BadRequestException(AUTH_ERRORS.PASSWORD_TOKEN_EXPIRED);
+      throw new GoneException({
+        message: AUTH_ERRORS.PASSWORD_TOKEN_EXPIRED,
+        userEmail: foundChangePasswordRequest.user.email,
+      });
     }
 
     await this.userRepository.softDeleteUserChangePasswordRequest(

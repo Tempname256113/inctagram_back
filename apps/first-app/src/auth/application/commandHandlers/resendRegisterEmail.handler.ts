@@ -1,19 +1,19 @@
-import { SendEmailDto, SendEmailTypes } from '../../dto/sendEmail.dto';
+import { ResendRegisterEmailDto } from '../../dto/resendRegisterEmail.dto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserRepository } from '../../repositories/user.repository';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { GoneException, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { add } from 'date-fns';
 
-export class SendEmailsCommand {
-  constructor(public readonly data: SendEmailDto) {}
+export class ResendRegisterEmailCommand {
+  constructor(public readonly data: ResendRegisterEmailDto) {}
 }
 
-@CommandHandler(SendEmailsCommand)
-export class SendEmailHandler
-  implements ICommandHandler<SendEmailsCommand, void>
+@CommandHandler(ResendRegisterEmailCommand)
+export class ResendRegisterEmailHandler
+  implements ICommandHandler<ResendRegisterEmailCommand, void>
 {
   constructor(
     private readonly userRepository: UserRepository,
@@ -21,34 +21,26 @@ export class SendEmailHandler
     private readonly nodemailerService: NodemailerService,
   ) {}
 
-  async execute(command: SendEmailsCommand): Promise<void> {
+  async execute(command: ResendRegisterEmailCommand): Promise<void> {
     const {
-      data: { userId, emailType },
+      data: { userEmail },
     } = command;
 
-    if (emailType === SendEmailTypes.REGISTER_CONFIRM) {
-      return this.sendRegisterConfirmEmailMessage(userId);
-    }
-  }
-
-  async sendRegisterConfirmEmailMessage(userId: number): Promise<void> {
-    const foundUser = await this.userQueryRepository.getUserById(userId);
+    const foundUser = await this.userQueryRepository.getUserByEmail(userEmail);
 
     if (!foundUser) {
-      throw new NotFoundException('User with provided id is not found');
+      throw new NotFoundException('User with provided email is not found');
     }
 
     const emailIsConfirmed: boolean = foundUser.userEmailInfo.emailIsConfirmed;
 
     if (emailIsConfirmed) {
-      throw new BadRequestException(
-        'User email with provided user id is already confirmed',
-      );
+      throw new GoneException('User email is already confirmed');
     }
 
     const confirmEmailCode: string = crypto.randomUUID();
 
-    await this.userRepository.updateUserEmailInfoByUserId(userId, {
+    await this.userRepository.updateUserEmailInfoByUserId(foundUser.id, {
       expiresAt: add(new Date(), { days: 3 }),
       emailConfirmCode: confirmEmailCode,
     });

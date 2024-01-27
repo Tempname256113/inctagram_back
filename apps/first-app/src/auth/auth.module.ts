@@ -7,7 +7,7 @@ import { BcryptService } from './utils/bcrypt.service';
 import { TokensService } from './utils/tokens.service';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginHandler } from './application/commandHandlers/login.handler';
-import { PasswordRecoveryHandler } from './application/commandHandlers/passwordRecovery/passwordRecovery.handler';
+import { PasswordRecoveryCodeCheckHandler } from './application/commandHandlers/passwordRecovery/passwordRecoveryCodeCheck.handler';
 import { UserRepository } from './repositories/user.repository';
 import { UserQueryRepository } from './repositories/query/user.queryRepository';
 import { PrismaService } from '@shared/database/prisma.service';
@@ -18,13 +18,15 @@ import { LogoutHandler } from './application/commandHandlers/logout.handler';
 import { UpdateTokensPairHandler } from './application/commandHandlers/updateTokensPair.handler';
 import { CheckRegisterCodeHandler } from './application/checkRegisterCode.handler';
 import { RecaptchaService } from './utils/recaptcha.service';
+import { ResendRegisterEmailHandler } from './application/commandHandlers/resendRegisterEmail.handler';
 
 const commandHandlers = [
   RegistrationHandler,
+  ResendRegisterEmailHandler,
   LoginHandler,
   LogoutHandler,
   PasswordRecoveryRequestHandler,
-  PasswordRecoveryHandler,
+  PasswordRecoveryCodeCheckHandler,
   GithubAuthHandler,
   GoogleAuthHandler,
   UpdateTokensPairHandler,

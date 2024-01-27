@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@shared/database/prisma.service';
-import {
-  UserChangePasswordRequest,
-  UserChangePasswordRequestStates,
-} from '@prisma/client';
+import { UserChangePasswordRequestStates } from '@prisma/client';
 
 @Injectable()
 export class UserQueryRepository {
@@ -27,7 +24,7 @@ export class UserQueryRepository {
     recoveryCode: string;
     state: UserChangePasswordRequestStates;
     deleted?: boolean;
-  }): Promise<UserChangePasswordRequest | null> {
+  }) {
     const { recoveryCode, state, deleted = false } = data;
 
     return this.prisma.userChangePasswordRequest.findFirst({
@@ -35,6 +32,23 @@ export class UserQueryRepository {
         passwordRecoveryCode: recoveryCode,
         state,
         deletedAt: deleted ? { not: null } : null,
+      },
+      include: { user: true },
+    });
+  }
+
+  async getPasswordRecoveryRequestByUserEmail(data: {
+    email: string;
+    state: UserChangePasswordRequestStates;
+    deleted?: boolean;
+  }) {
+    const { email, state, deleted } = data;
+
+    return this.prisma.userChangePasswordRequest.findFirst({
+      where: {
+        state,
+        deletedAt: deleted ? { not: null } : null,
+        user: { email },
       },
     });
   }
