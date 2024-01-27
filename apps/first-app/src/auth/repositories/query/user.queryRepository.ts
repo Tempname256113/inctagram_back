@@ -33,6 +33,7 @@ export class UserQueryRepository {
         state,
         deletedAt: deleted ? { not: null } : null,
       },
+      include: { user: true },
     });
   }
 

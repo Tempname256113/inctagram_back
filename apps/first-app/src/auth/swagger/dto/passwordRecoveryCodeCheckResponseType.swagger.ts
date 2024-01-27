@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class RegisterCodeCheckResponseTypeSwagger {
+export class PasswordRecoveryCodeCheckResponseTypeSwagger {
   @ApiProperty({
     description: 'User email of provided code',
-    example: 1,
-    type: 'number',
+    example: 'temp.256113@gmail.com',
+    type: 'string',
   })
   userEmail: string;
 
