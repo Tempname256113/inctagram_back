@@ -16,7 +16,14 @@ export class UserQueryRepository {
     });
   }
 
-  async getUserChangePasswordRequestByCode(data: {
+  async getUserById(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { userEmailInfo: true },
+    });
+  }
+
+  async getPasswordRecoveryRequestByCode(data: {
     recoveryCode: string;
     state: UserChangePasswordRequestStates;
     deleted?: boolean;
@@ -29,6 +36,13 @@ export class UserQueryRepository {
         state,
         deletedAt: deleted ? { not: null } : null,
       },
+    });
+  }
+
+  async getUserByConfirmEmailCode(confirmEmailCode: string) {
+    return this.prisma.user.findFirst({
+      where: { userEmailInfo: { emailConfirmCode: confirmEmailCode } },
+      include: { userEmailInfo: true },
     });
   }
 

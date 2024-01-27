@@ -16,6 +16,7 @@ import { GithubAuthHandler } from './application/commandHandlers/githubAuth.hand
 import { GoogleAuthHandler } from './application/commandHandlers/googleAuth.handler';
 import { LogoutHandler } from './application/commandHandlers/logout.handler';
 import { UpdateTokensPairHandler } from './application/commandHandlers/updateTokensPair.handler';
+import { CheckRegisterCodeHandler } from './application/checkRegisterCode.handler';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -26,6 +27,7 @@ const commandHandlers = [
   GithubAuthHandler,
   GoogleAuthHandler,
   UpdateTokensPairHandler,
+  CheckRegisterCodeHandler,
 ];
 
 const repos = [UserRepository];

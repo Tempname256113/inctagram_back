@@ -7,7 +7,7 @@ import { User } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { USER_ERRORS } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
-import { UserPasswordRecoveryRequestDTO } from '../../../dto/password-recovery.dto';
+import { UserPasswordRecoveryRequestDTO } from '../../../dto/passwordRecovery.dto';
 
 export class PasswordRecoveryRequestCommand {
   constructor(

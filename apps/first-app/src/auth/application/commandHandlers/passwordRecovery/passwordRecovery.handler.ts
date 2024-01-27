@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException } from '@nestjs/common';
 import { UserChangePasswordRequestStates } from '@prisma/client';
-import { UserPasswordRecoveryDTO } from '../../../dto/password-recovery.dto';
+import { UserPasswordRecoveryDTO } from '../../../dto/passwordRecovery.dto';
 import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
 import {
   AUTH_ERRORS,
@@ -28,7 +28,7 @@ export class PasswordRecoveryHandler
     passwordRecoveryDTO,
   }: PasswordRecoveryCommand): Promise<void> {
     const foundChangePasswordRequest =
-      await this.userQueryRepository.getUserChangePasswordRequestByCode({
+      await this.userQueryRepository.getPasswordRecoveryRequestByCode({
         recoveryCode: passwordRecoveryDTO.passwordRecoveryCode,
         state: UserChangePasswordRequestStates.pending,
         deleted: false,

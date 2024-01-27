@@ -6,6 +6,7 @@ import { GithubAuthCommand } from './githubAuth.handler';
 import { GoogleAuthCommand } from './googleAuth.handler';
 import { LogoutCommand } from './logout.handler';
 import { UpdateTokensPairCommand } from './updateTokensPair.handler';
+import { CheckRegisterCodeCommand } from '../checkRegisterCode.handler';
 
 export {
   PasswordRecoveryRequestCommand,
@@ -16,4 +17,5 @@ export {
   GithubAuthCommand,
   GoogleAuthCommand,
   UpdateTokensPairCommand,
+  CheckRegisterCodeCommand,
 };
