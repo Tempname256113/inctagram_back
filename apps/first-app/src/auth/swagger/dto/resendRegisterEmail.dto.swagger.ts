@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ResendRegisterEmailDtoSwagger {
-  @ApiProperty({ type: 'number', required: true, example: 33 })
-  userId: number;
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    example: 'temp.256113@gmail.com',
+  })
+  userEmail: string;
 }
