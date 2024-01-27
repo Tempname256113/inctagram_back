@@ -8,6 +8,7 @@ import { NotFoundException } from '@nestjs/common';
 import { USER_ERRORS } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
 import { UserPasswordRecoveryRequestDTO } from '../../../dto/passwordRecovery.dto';
+import { RecaptchaService } from '../../../utils/recaptcha.service';
 
 export class PasswordRecoveryRequestCommand {
   constructor(
@@ -23,11 +24,16 @@ export class PasswordRecoveryRequestHandler
     private readonly userQueryRepository: UserQueryRepository,
     private readonly userRepository: UserRepository,
     private readonly nodemailerService: NodemailerService,
+    private readonly recaptchaService: RecaptchaService,
   ) {}
 
   async execute({
     passwordRecoveryRequestDTO,
   }: PasswordRecoveryRequestCommand): Promise<void> {
+    await this.recaptchaService.validateToken(
+      passwordRecoveryRequestDTO.recaptchaToken,
+    );
+
     const foundUser: User | null =
       await this.userQueryRepository.getUserByEmail(
         passwordRecoveryRequestDTO.email,

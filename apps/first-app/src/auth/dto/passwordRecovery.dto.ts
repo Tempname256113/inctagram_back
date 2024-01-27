@@ -24,4 +24,8 @@ export class UserPasswordRecoveryDTO {
 export class UserPasswordRecoveryRequestDTO {
   @IsEmail()
   email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }
