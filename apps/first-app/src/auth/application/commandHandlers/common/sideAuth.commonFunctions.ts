@@ -44,6 +44,7 @@ export class SideAuthCommonFunctions {
         user.id,
         {
           provider,
+          emailIsConfirmed: true,
         },
       );
     }
