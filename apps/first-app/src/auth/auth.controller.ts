@@ -44,7 +44,7 @@ import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
 import { RegisterCodeDto } from './dto/register.dto';
 import { ResendRegisterEmailDto } from './dto/resendRegisterEmail.dto';
-
+// надо чтобы задеплоить
 @Controller('auth')
 @ApiTags('auth controllers')
 export class AuthController {
