@@ -1,28 +1,25 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
-import { GithubAuthDto } from '../../dto/githubAuth.dto';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, UnauthorizedException } from '@nestjs/common';
 import authConfig from '@shared/config/auth.config.service';
 import { ConfigType } from '@nestjs/config';
-import { Providers, User } from '@prisma/client';
+import { Providers } from '@prisma/client';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 import { UserRepository } from '../../repositories/user.repository';
 import { TokensService } from '../../utils/tokens.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import axios from 'axios';
+import { Response } from 'express';
+import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
+import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
 
-export class GithubAuthCommand implements ICommand {
-  constructor(public readonly githubCode: GithubAuthDto) {}
+export class GithubAuthCommand {
+  constructor(public readonly data: { githubCode: string; res: Response }) {}
 }
-
-export type GithubUserInfo = {
-  userId: number;
-  username: string;
-  accessToken: string;
-};
 
 @CommandHandler(GithubAuthCommand)
 export class GithubAuthHandler
-  implements ICommandHandler<GithubAuthCommand, GithubUserInfo>
+  extends SideAuthCommonFunctions
+  implements ICommandHandler<GithubAuthCommand, SideAuthResponseType>
 {
   constructor(
     @Inject(authConfig.KEY)
@@ -31,13 +28,41 @@ export class GithubAuthHandler
     private readonly userRepository: UserRepository,
     private readonly tokensService: TokensService,
     private readonly nodemailerService: NodemailerService,
-  ) {}
+  ) {
+    super({
+      userQueryRepository,
+      userRepository,
+      nodemailerService,
+      tokensService,
+    });
+  }
 
-  async execute(command: GithubAuthCommand): Promise<GithubUserInfo> {
+  async execute(command: GithubAuthCommand): Promise<SideAuthResponseType> {
     const {
-      githubCode: { code: githubCode },
+      data: { githubCode, res },
     } = command;
 
+    const userInfoFromGithub = await this.getUserInfoFromGithub(githubCode);
+
+    const userFromDB = await this.getUserFromDB({
+      userEmail: userInfoFromGithub.userEmail,
+      username: userInfoFromGithub.username,
+      provider: Providers.Github,
+    });
+
+    await this.createUserSession(userFromDB.id, res);
+
+    return {
+      userId: userFromDB.id,
+      username: userFromDB.username,
+      accessToken: await this.tokensService.createAccessToken(userFromDB.id),
+    };
+  }
+
+  async getUserInfoFromGithub(githubCode: string): Promise<{
+    username: string;
+    userEmail: string;
+  }> {
     const clientId: string = this.config.GITHUB_CLIENT_ID;
     const clientSecret: string = this.config.GITHUB_CLIENT_SECRET;
 
@@ -45,6 +70,9 @@ export class GithubAuthHandler
       access_token: string;
       token_type: string;
       scope: string;
+      error?: string;
+      error_description?: string;
+      error_uri?: string;
     } = await axios({
       method: 'post',
       url: `https://github.com/login/oauth/access_token?client_id=${clientId}&client_secret=${clientSecret}&code=${githubCode}`,
@@ -52,8 +80,11 @@ export class GithubAuthHandler
     })
       .then((res) => res.data)
       .catch((err) => {
-        throw new UnauthorizedException(err.data);
+        throw new UnauthorizedException(err);
       });
+    if (accessToken.error) {
+      throw new UnauthorizedException(accessToken);
+    }
 
     const userEmails: {
       email: string;
@@ -80,34 +111,9 @@ export class GithubAuthHandler
         throw new UnauthorizedException(err.data);
       });
 
-    const username: string = userInfo.name ?? userInfo.login;
-
-    const foundedUser: User | null =
-      await this.userQueryRepository.getUserByEmail(userEmails[0].email);
-
-    if (foundedUser) {
-      await this.userRepository.updateUserEmailInfoByUserId(foundedUser.id, {
-        provider: Providers.Github,
-      });
-
-      return {
-        userId: foundedUser.id,
-        username: foundedUser.username,
-        accessToken: await this.tokensService.createAccessToken(foundedUser.id),
-      };
-    }
-
-    const newUser: User = await this.userRepository.createUser({
-      user: { email: userEmails[0].email, username },
-      emailInfo: { provider: Providers.Github, emailIsConfirmed: true },
-    });
-
-    this.nodemailerService.sendRegistrationSuccessfulMessage(newUser.email);
-
     return {
-      userId: newUser.id,
-      username: newUser.username,
-      accessToken: await this.tokensService.createAccessToken(foundedUser.id),
+      userEmail: userEmails[0].email,
+      username: userInfo.name ?? userInfo.login,
     };
   }
 }

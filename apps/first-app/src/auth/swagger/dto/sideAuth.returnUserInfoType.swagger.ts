@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GithubAuthReturnUserInfoTypeSwagger {
+export class SideAuthReturnUserInfoTypeSwagger {
   @ApiProperty({
     description: 'Created/found existed user id',
     example: 33,

@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { USER_ERRORS } from '../variables/validationErrors.messages';
 
-export class UserPasswordRecoveryDTO {
+export class UserPasswordRecoveryCodeCheckDTO {
   @IsString()
   @IsNotEmpty()
   passwordRecoveryCode: string;
@@ -24,4 +24,8 @@ export class UserPasswordRecoveryDTO {
 export class UserPasswordRecoveryRequestDTO {
   @IsEmail()
   email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }

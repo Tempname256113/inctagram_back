@@ -1,51 +1,63 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@shared/database/prisma.service';
-import {
-  UserChangePasswordRequest,
-  UserChangePasswordRequestStates,
-} from '@prisma/client';
-import { User } from '@prisma/client';
+import { UserChangePasswordRequestStates } from '@prisma/client';
 
 @Injectable()
 export class UserQueryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getUserByEmail(email: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { email } });
+  async getUserByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: { userEmailInfo: true },
+    });
   }
 
-  async getUserChangePasswordRequestByCode(data: {
+  async getUserById(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { userEmailInfo: true },
+    });
+  }
+
+  async getPasswordRecoveryRequestByCode(data: {
     recoveryCode: string;
     state: UserChangePasswordRequestStates;
     deleted?: boolean;
-  }): Promise<UserChangePasswordRequest | null> {
-    const { recoveryCode, state, deleted = 'default' } = data;
+  }) {
+    const { recoveryCode, state, deleted = false } = data;
 
-    if (deleted === 'default') {
-      return this.prisma.userChangePasswordRequest.findFirst({
-        where: {
-          passwordRecoveryCode: recoveryCode,
-          state,
-        },
-      });
-    }
+    return this.prisma.userChangePasswordRequest.findFirst({
+      where: {
+        passwordRecoveryCode: recoveryCode,
+        state,
+        deletedAt: deleted ? { not: null } : null,
+      },
+      include: { user: true },
+    });
+  }
 
-    if (data.deleted) {
-      return this.prisma.userChangePasswordRequest.findFirst({
-        where: {
-          passwordRecoveryCode: recoveryCode,
-          state,
-        },
-      });
-    } else {
-      return this.prisma.userChangePasswordRequest.findFirst({
-        where: {
-          passwordRecoveryCode: recoveryCode,
-          state,
-          deletedAt: { not: null },
-        },
-      });
-    }
+  async getPasswordRecoveryRequestByUserEmail(data: {
+    email: string;
+    state: UserChangePasswordRequestStates;
+    deleted?: boolean;
+  }) {
+    const { email, state, deleted } = data;
+
+    return this.prisma.userChangePasswordRequest.findFirst({
+      where: {
+        state,
+        deletedAt: deleted ? { not: null } : null,
+        user: { email },
+      },
+    });
+  }
+
+  async getUserByConfirmEmailCode(confirmEmailCode: string) {
+    return this.prisma.user.findFirst({
+      where: { userEmailInfo: { emailConfirmCode: confirmEmailCode } },
+      include: { userEmailInfo: true },
+    });
   }
 
   async getUserByEmailOrUsernameWithFullInfo(data: {

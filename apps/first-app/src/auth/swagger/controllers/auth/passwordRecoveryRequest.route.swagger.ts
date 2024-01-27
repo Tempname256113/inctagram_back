@@ -6,7 +6,7 @@ export const PasswordRecoveryRequestRouteSwaggerDescription = () => {
   return applyDecorators(
     ApiOkResponse({ description: 'Password recovery code sent to email' }),
     ApiNotFoundResponse({
-      description: 'Not found user with provided credentials',
+      description: 'Not found user with provided userId or email',
     }),
     ApiBody({ type: UserPasswordRecoveryRequestDtoSwagger }),
   );

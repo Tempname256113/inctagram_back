@@ -1,4 +1,4 @@
-import { CommandHandler, ICommand, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserRegisterDTO } from '../../dto/user.dto';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
@@ -8,7 +8,7 @@ import { ConflictException } from '@nestjs/common';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 
-export class RegistrationCommand implements ICommand {
+export class RegistrationCommand {
   constructor(public readonly userRegisterDTO: UserRegisterDTO) {}
 }
 
@@ -39,30 +39,27 @@ export class RegistrationHandler
   }): Promise<'No need to create a new user' | 'Need to create a new user'> {
     const { username, email, password } = data;
 
-    const foundedUser =
+    const foundUser =
       await this.userQueryRepository.getUserByEmailOrUsernameWithFullInfo({
         email,
         username,
       });
 
-    if (foundedUser?.username === username && foundedUser?.email === email) {
-      if (!foundedUser.userEmailInfo.emailIsConfirmed) {
+    if (foundUser?.username === username && foundUser?.email === email) {
+      if (!foundUser.userEmailInfo.emailIsConfirmed) {
         const userPasswordIsCorrect: boolean =
           await this.bcryptService.compareHashAndPassword({
             password,
-            hash: foundedUser.password,
+            hash: foundUser.password,
           });
 
         if (userPasswordIsCorrect) {
           const emailConfirmCode: string = crypto.randomUUID();
 
-          await this.userRepository.updateUserEmailInfoByUserId(
-            foundedUser.id,
-            {
-              expiresAt: add(new Date(), { days: 3 }),
-              emailConfirmCode,
-            },
-          );
+          await this.userRepository.updateUserEmailInfoByUserId(foundUser.id, {
+            expiresAt: add(new Date(), { days: 3 }),
+            emailConfirmCode,
+          });
 
           this.nodemailerService.sendRegistrationConfirmMessage({
             email,
@@ -74,9 +71,9 @@ export class RegistrationHandler
       }
     }
 
-    if (foundedUser?.email === email) {
+    if (foundUser?.email === email) {
       throw new ConflictException('User with this email is already registered');
-    } else if (foundedUser?.username === username) {
+    } else if (foundUser?.username === username) {
       throw new ConflictException(
         'User with this username is already registered',
       );
@@ -94,13 +91,13 @@ export class RegistrationHandler
       password,
     });
 
+    const emailConfirmCode: string = crypto.randomUUID();
+
     if (createNewUserOrNot === 'No need to create a new user') {
       return;
     }
 
-    const emailConfirmCode: string = crypto.randomUUID();
-
-    await this.userRepository.createUser({
+    const createdUser = await this.userRepository.createUser({
       user: {
         email,
         username,
@@ -114,8 +111,8 @@ export class RegistrationHandler
     });
 
     this.nodemailerService.sendRegistrationConfirmMessage({
-      email,
-      confirmCode: emailConfirmCode,
+      email: createdUser.email,
+      confirmCode: createdUser.userEmailInfo.emailConfirmCode,
     });
   }
 }

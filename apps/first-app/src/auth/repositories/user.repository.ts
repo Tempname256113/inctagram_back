@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Providers, User, UserEmailInfo, UserSession } from '@prisma/client';
-import { UserChangePasswordRequest } from '@prisma/client';
+import {
+  Providers,
+  User,
+  UserChangePasswordRequest,
+  UserEmailInfo,
+  UserSession,
+} from '@prisma/client';
 import { PrismaService } from '@shared/database/prisma.service';
 
 @Injectable()
@@ -19,7 +24,7 @@ export class UserRepository {
       registrationConfirmCode?: string;
       emailIsConfirmed: boolean;
     };
-  }): Promise<User> {
+  }) {
     const { username, email, password = null } = userCreateDTO.user;
 
     const {
@@ -43,9 +48,17 @@ export class UserRepository {
           },
         },
       },
+      include: { userEmailInfo: true },
     });
 
     return newUser;
+  }
+
+  async updateUserById(
+    userId: number,
+    data: Partial<Omit<User, 'createdAt' | 'updatedAt' | 'id'>>,
+  ) {
+    return this.prisma.user.update({ where: { id: userId }, data });
   }
 
   async updateUserEmailInfoByUserId(
@@ -66,6 +79,21 @@ export class UserRepository {
         passwordRecoveryCode: data.passwordRecoveryCode,
         expiresAt: data.expiresAt,
       },
+    });
+  }
+
+  async updateUserChangePasswordRequest(
+    passwordRecoveryRequestId: number,
+    data: Partial<
+      Omit<
+        UserChangePasswordRequest,
+        'createdAt' | 'updatedAt' | 'userId' | 'id'
+      >
+    >,
+  ) {
+    return this.prisma.userChangePasswordRequest.update({
+      where: { id: passwordRecoveryRequestId },
+      data,
     });
   }
 
@@ -124,5 +152,9 @@ export class UserRepository {
     await this.prisma.userSession.deleteMany({
       where: { userId: data.userId, refreshTokenUuid: data.refreshTokenUuid },
     });
+  }
+
+  async deleteAllUserSessions(userId: number) {
+    return this.prisma.userSession.deleteMany({ where: { userId } });
   }
 }

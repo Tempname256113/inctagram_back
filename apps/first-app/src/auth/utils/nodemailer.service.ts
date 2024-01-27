@@ -1,17 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
-import { ConfigService } from '@nestjs/config';
+import { ConfigType } from '@nestjs/config';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import appConfig from '@shared/config/app.config.service';
 
 @Injectable()
 export class NodemailerService {
   private readonly transporter: Transporter<SMTPTransport.SentMessageInfo>;
   private readonly nodemailerEmailUser: string;
+  private readonly frontendUrl: string;
 
-  constructor(private readonly configService: ConfigService) {
-    this.nodemailerEmailUser = this.configService.get<string>(
-      'APP_CONFIG.EMAIL_USER',
-    );
+  constructor(
+    @Inject(appConfig.KEY)
+    private readonly config: ConfigType<typeof appConfig>,
+  ) {
+    this.nodemailerEmailUser = this.config.EMAIL_USER;
+    this.frontendUrl = this.config.FRONTEND_URL;
 
     this.transporter = createTransport({
       service: 'gmail',
@@ -19,8 +23,8 @@ export class NodemailerService {
       port: 587,
       secure: false,
       auth: {
-        user: this.nodemailerEmailUser,
-        pass: this.configService.get<string>('APP_CONFIG.EMAIL_PASS'),
+        user: this.config.EMAIL_USER,
+        pass: this.config.EMAIL_PASS,
       },
     });
   }
@@ -36,7 +40,7 @@ export class NodemailerService {
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Confirm your registration please',
-        html: `To confirm your registration follow link: <a href='http://localhost:3021/api/v1/auth/registration/confirm/${confirmCode}'>confirm registration</a>`,
+        html: `To confirm your registration follow link: <a href='${this.frontendUrl}/auth/confirm-registration?code=${confirmCode}'>confirm registration</a>`,
       });
     } catch (err) {
       console.error(err);
@@ -55,7 +59,7 @@ export class NodemailerService {
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Password recovery',
-        html: `To reset your password follow link: <a href='http://localhost:3021/api/v1/auth/change-email?token=${userPasswordRecoveryCode}'>Password recovery</a>`,
+        html: `To reset your password follow link: <a href='${this.frontendUrl}/auth/password-reset?code=${userPasswordRecoveryCode}'>Password recovery</a>`,
       });
     } catch (err) {
       console.log(err);
