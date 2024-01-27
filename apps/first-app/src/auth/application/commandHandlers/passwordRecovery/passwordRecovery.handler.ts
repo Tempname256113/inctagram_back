@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException } from '@nestjs/common';
 import { UserChangePasswordRequestStates } from '@prisma/client';
-import { UserPasswordRecoveryDTO } from '../../../dto/password-recovery.dto';
+import { UserPasswordRecoveryDTO } from '../../../dto/passwordRecovery.dto';
 import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
 import {
   AUTH_ERRORS,

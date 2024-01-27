@@ -16,6 +16,13 @@ export class UserQueryRepository {
     });
   }
 
+  async getUserById(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { userEmailInfo: true },
+    });
+  }
+
   async getPasswordRecoveryRequestByCode(data: {
     recoveryCode: string;
     state: UserChangePasswordRequestStates;

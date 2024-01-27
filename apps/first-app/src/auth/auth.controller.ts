@@ -13,7 +13,7 @@ import { refreshTokenCookieProp } from './variables/refreshToken.variable';
 import {
   UserPasswordRecoveryDTO,
   UserPasswordRecoveryRequestDTO,
-} from './dto/password-recovery.dto';
+} from './dto/passwordRecovery.dto';
 import { Cookies } from './decorators/cookies.decorator';
 import { Response as Res } from 'express';
 import { ApiTags } from '@nestjs/swagger';
@@ -26,6 +26,7 @@ import {
   RegisterRouteSwaggerDescription,
   SideAuthRouteSwaggerDescription,
   UpdateTokensPairRouteSwaggerDescription,
+  SendEmailRouteSwaggerDescription,
 } from '@swagger/auth';
 import {
   CheckRegisterCodeCommand,
@@ -41,6 +42,8 @@ import {
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
 import { RegisterCodeDto } from './dto/register.dto';
+import { SendEmailDto } from './dto/sendEmail.dto';
+import { SendEmailsCommand } from './application/commandHandlers/sendEmails.handler';
 
 @Controller('auth')
 @ApiTags('auth controllers')
@@ -50,7 +53,9 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @RegisterRouteSwaggerDescription()
-  async register(@Body() userRegistrationDTO: UserRegisterDTO) {
+  async register(
+    @Body() userRegistrationDTO: UserRegisterDTO,
+  ): Promise<string> {
     await this.commandBus.execute(
       new RegistrationCommand({
         email: userRegistrationDTO.email,
@@ -65,16 +70,30 @@ export class AuthController {
   @Post('register-code-check')
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegisterCodeCheckRouteSwaggerDescription()
-  async checkRegisterCode(@Body() registerCode: RegisterCodeDto) {
+  async checkRegisterCode(
+    @Body() registerCode: RegisterCodeDto,
+  ): Promise<void> {
     await this.commandBus.execute(
       new CheckRegisterCodeCommand(registerCode.code),
     );
   }
 
+  @Post('send-email')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @SendEmailRouteSwaggerDescription()
+  async sendEmail(@Body() sendEmailInfo: SendEmailDto): Promise<void> {
+    //   надо будет дописать логику. нужно чтобы с этим роутом можно было присылать на почту сообщения про подтверждение регистрации
+    //   и про смену пароля (если закончился по времени код то надо новый запрос сделать)
+    await this.commandBus.execute(new SendEmailsCommand(sendEmailInfo));
+  }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @LoginRouteSwaggerDescription()
-  async login(@Body() userLoginDTO: UserLoginDTO, @Response() res: Res) {
+  async login(
+    @Body() userLoginDTO: UserLoginDTO,
+    @Response() res: Res,
+  ): Promise<void> {
     await this.commandBus.execute(new LoginCommand({ userLoginDTO, res }));
   }
 
@@ -84,7 +103,7 @@ export class AuthController {
   async updateTokensPair(
     @Cookies(refreshTokenCookieProp) refreshToken: string,
     @Response() res: Res,
-  ) {
+  ): Promise<void> {
     if (!refreshToken) {
       throw new UnauthorizedException(
         'Provide refresh token in cookies for update tokens pair',
@@ -99,7 +118,9 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @LogoutRouteSwaggerDescription()
-  async logout(@Cookies(refreshTokenCookieProp) refreshToken: string) {
+  async logout(
+    @Cookies(refreshTokenCookieProp) refreshToken: string,
+  ): Promise<string> {
     if (!refreshToken) {
       throw new UnauthorizedException('Provide refresh token for logout');
     }
@@ -114,7 +135,7 @@ export class AuthController {
   @PasswordRecoveryRequestRouteSwaggerDescription()
   async passwordRecoveryRequest(
     @Body() passwordRecoveryRequestDTO: UserPasswordRecoveryRequestDTO,
-  ) {
+  ): Promise<void> {
     await this.commandBus.execute(
       new PasswordRecoveryRequestCommand(passwordRecoveryRequestDTO),
     );
@@ -123,7 +144,9 @@ export class AuthController {
   @Post('password-recovery')
   @HttpCode(HttpStatus.OK)
   @PasswordRecoveryRouteSwaggerDescription()
-  async passwordRecovery(@Body() passwordRecoveryDTO: UserPasswordRecoveryDTO) {
+  async passwordRecovery(
+    @Body() passwordRecoveryDTO: UserPasswordRecoveryDTO,
+  ): Promise<void> {
     await this.commandBus.execute(
       new PasswordRecoveryCommand(passwordRecoveryDTO),
     );

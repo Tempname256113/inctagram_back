@@ -6,6 +6,7 @@ import { RegisterRouteSwaggerDescription } from './controllers/auth/register.rou
 import { UpdateTokensPairRouteSwaggerDescription } from './controllers/auth/updateTokensPair.route.swagger';
 import { SideAuthRouteSwaggerDescription } from './controllers/auth/sideAuth.route.swagger';
 import { RegisterCodeCheckRouteSwaggerDescription } from './controllers/auth/registerCodeCheck.route.swagger';
+import { SendEmailRouteSwaggerDescription } from './controllers/auth/sendEmail.route.swagger';
 
 export {
   LoginRouteSwaggerDescription,
@@ -16,4 +17,5 @@ export {
   UpdateTokensPairRouteSwaggerDescription,
   SideAuthRouteSwaggerDescription,
   RegisterCodeCheckRouteSwaggerDescription,
+  SendEmailRouteSwaggerDescription,
 };
