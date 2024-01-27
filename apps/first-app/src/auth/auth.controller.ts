@@ -141,8 +141,8 @@ export class AuthController {
     );
   }
 
-  @Post('password-recovery')
-  @HttpCode(HttpStatus.OK)
+  @Post('password-recovery-code-check')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @PasswordRecoveryRouteSwaggerDescription()
   async passwordRecovery(
     @Body() passwordRecoveryDTO: UserPasswordRecoveryDTO,

@@ -74,6 +74,21 @@ export class UserRepository {
     });
   }
 
+  async updateUserChangePasswordRequest(
+    passwordRecoveryRequestId: number,
+    data: Partial<
+      Omit<
+        UserChangePasswordRequest,
+        'createdAt' | 'updatedAt' | 'userId' | 'id'
+      >
+    >,
+  ) {
+    return this.prisma.userChangePasswordRequest.update({
+      where: { id: passwordRecoveryRequestId },
+      data,
+    });
+  }
+
   async softDeleteUserChangePasswordRequest(requestId: number): Promise<void> {
     await this.prisma.userChangePasswordRequest.update({
       where: { id: requestId },
