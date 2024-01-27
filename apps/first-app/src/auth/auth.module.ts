@@ -17,6 +17,7 @@ import { GoogleAuthHandler } from './application/commandHandlers/googleAuth.hand
 import { LogoutHandler } from './application/commandHandlers/logout.handler';
 import { UpdateTokensPairHandler } from './application/commandHandlers/updateTokensPair.handler';
 import { CheckRegisterCodeHandler } from './application/checkRegisterCode.handler';
+import { RecaptchaService } from './utils/recaptcha.service';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -45,6 +46,7 @@ const queryRepos = [UserQueryRepository];
     NodemailerService,
     BcryptService,
     PrismaService,
+    RecaptchaService,
   ],
 })
 export class AuthModule {}

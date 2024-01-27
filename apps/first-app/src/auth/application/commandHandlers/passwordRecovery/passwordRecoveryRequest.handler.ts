@@ -7,9 +7,12 @@ import { User, UserChangePasswordRequestStates } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { USER_ERRORS } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
+import { RecaptchaService } from '../../../utils/recaptcha.service';
 
 export class PasswordRecoveryRequestCommand {
-  constructor(public readonly data: { email: string }) {}
+  constructor(
+    public readonly data: { email: string; recaptchaToken: string },
+  ) {}
 }
 
 @CommandHandler(PasswordRecoveryRequestCommand)
@@ -20,11 +23,16 @@ export class PasswordRecoveryRequestHandler
     private readonly userQueryRepository: UserQueryRepository,
     private readonly userRepository: UserRepository,
     private readonly nodemailerService: NodemailerService,
+    private readonly recaptchaService: RecaptchaService,
   ) {}
 
   async execute({
-    data: { email },
+    data: { email, recaptchaToken },
   }: PasswordRecoveryRequestCommand): Promise<void> {
+    await this.recaptchaService.validateToken(
+      recaptchaToken,
+    );
+
     const foundUser: User | null =
       await this.userQueryRepository.getUserByEmail(email);
 
