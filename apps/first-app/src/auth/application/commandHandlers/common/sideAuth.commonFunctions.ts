@@ -4,9 +4,9 @@ import { TokensService } from '../../../utils/tokens.service';
 import { NodemailerService } from '../../../utils/nodemailer.service';
 import { Response } from 'express';
 import { RefreshTokenPayloadType } from '../../../types/tokens.models';
-import { refreshTokenCookieProp } from '../../../variables/refreshToken.variable';
 import { Providers } from '@prisma/client';
 import * as crypto from 'crypto';
+import { getRefreshTokenCookieConfig } from '../../../variables/refreshToken.config';
 
 export class SideAuthCommonFunctions {
   constructor(
@@ -73,10 +73,14 @@ export class SideAuthCommonFunctions {
       expiresAt: refreshTokenExpiresAtDate,
     });
 
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
+    const refreshTokenCookieConfig = getRefreshTokenCookieConfig(
+      refreshTokenExpiresAtDate,
+    );
+
+    res.cookie(
+      refreshTokenCookieConfig.cookieTitle,
+      refreshToken,
+      refreshTokenCookieConfig.cookieOptions,
+    );
   }
 }

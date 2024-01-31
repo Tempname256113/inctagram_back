@@ -8,6 +8,7 @@ import { LogoutCommand } from './logout.handler';
 import { UpdateTokensPairCommand } from './updateTokensPair.handler';
 import { CheckRegisterCodeCommand } from '../checkRegisterCode.handler';
 import { ResendRegisterEmailCommand } from './resendRegisterEmail.handler';
+import { PasswordRecoveryCommand } from './passwordRecovery/passwordRecovery.handler';
 
 export {
   PasswordRecoveryRequestCommand,
@@ -20,4 +21,5 @@ export {
   UpdateTokensPairCommand,
   CheckRegisterCodeCommand,
   ResendRegisterEmailCommand,
+  PasswordRecoveryCommand,
 };

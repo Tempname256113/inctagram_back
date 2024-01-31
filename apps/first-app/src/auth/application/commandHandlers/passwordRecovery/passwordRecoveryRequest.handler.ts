@@ -8,10 +8,10 @@ import { NotFoundException } from '@nestjs/common';
 import { USER_ERRORS } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
 import { RecaptchaService } from '../../../utils/recaptcha.service';
-import { UserPasswordRecoveryRequestDTO } from '../../../dto/passwordRecovery.dto';
+import { PasswordRecoveryRequestDTO } from '../../../dto/passwordRecovery.dto';
 
 export class PasswordRecoveryRequestCommand {
-  constructor(public readonly data: UserPasswordRecoveryRequestDTO) {}
+  constructor(public readonly data: PasswordRecoveryRequestDTO) {}
 }
 
 @CommandHandler(PasswordRecoveryRequestCommand)

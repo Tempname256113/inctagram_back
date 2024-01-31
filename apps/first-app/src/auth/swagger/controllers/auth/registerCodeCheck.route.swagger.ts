@@ -5,8 +5,10 @@ import {
   ApiNoContentResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { RegisterCodeCheckResponseTypeSwagger } from '../../dto/registerCodeCheckResponseType.swagger';
-import { RegisterCodeCheckDtoSwagger } from '../../dto/registerCodeCheck.dto.swagger';
+import {
+  RegisterCodeCheckDtoSwagger,
+  RegisterCodeCheckResponseTypeSwagger,
+} from '../../../dto/register.dto';
 
 export const RegisterCodeCheckRouteSwaggerDescription = () => {
   return applyDecorators(
