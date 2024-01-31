@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { LoginDTO } from './dto/login.dto';
 import { CommandBus } from '@nestjs/cqrs';
-import { refreshTokenCookieProp } from './variables/refreshToken.variable';
 import {
   PasswordRecoveryCodeCheckDTO,
   PasswordRecoveryDto,
@@ -50,6 +49,7 @@ import {
   RegisterDTO,
   ResendRegisterEmailDto,
 } from './dto/register.dto';
+import { refreshTokenCookieTitle } from './variables/refreshToken.config';
 
 // надо чтобы задеплоить
 @Controller('auth')
@@ -106,7 +106,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @UpdateTokensPairRouteSwaggerDescription()
   async updateTokensPair(
-    @Cookies(refreshTokenCookieProp) refreshToken: string,
+    @Cookies(refreshTokenCookieTitle) refreshToken: string,
     @Response() res: Res,
   ): Promise<void> {
     if (!refreshToken) {
@@ -124,7 +124,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @LogoutRouteSwaggerDescription()
   async logout(
-    @Cookies(refreshTokenCookieProp) refreshToken: string,
+    @Cookies(refreshTokenCookieTitle) refreshToken: string,
   ): Promise<void> {
     if (!refreshToken) {
       throw new UnauthorizedException('Provide refresh token for logout');

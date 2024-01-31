@@ -2,9 +2,9 @@ import { Response } from 'express';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { RefreshTokenPayloadType } from '../../types/tokens.models';
 import { HttpStatus, UnauthorizedException } from '@nestjs/common';
-import { refreshTokenCookieProp } from '../../variables/refreshToken.variable';
 import { TokensService } from '../../utils/tokens.service';
 import { UserRepository } from '../../repositories/user.repository';
+import { getRefreshTokenCookieConfig } from '../../variables/refreshToken.config';
 
 export class UpdateTokensPairCommand {
   constructor(public readonly data: { refreshToken: string; res: Response }) {}
@@ -55,11 +55,15 @@ export class UpdateTokensPairHandler
       throw new UnauthorizedException('Refresh token is invalid');
     }
 
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: newRefreshTokenExpiresAtDate,
-    });
+    const refreshTokenCookieConfig = getRefreshTokenCookieConfig(
+      newRefreshTokenExpiresAtDate,
+    );
+
+    res.cookie(
+      refreshTokenCookieConfig.cookieTitle,
+      refreshToken,
+      refreshTokenCookieConfig.cookieOptions,
+    );
 
     const newAccessToken = newTokensPair.accessToken;
 

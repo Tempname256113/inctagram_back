@@ -7,9 +7,9 @@ import { Response } from 'express';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 import { TokensService } from '../../utils/tokens.service';
 import { RefreshTokenPayloadType } from '../../types/tokens.models';
-import { refreshTokenCookieProp } from '../../variables/refreshToken.variable';
 import * as crypto from 'crypto';
 import { UserRepository } from '../../repositories/user.repository';
+import { getRefreshTokenCookieConfig } from '../../variables/refreshToken.config';
 
 export class LoginCommand {
   constructor(
@@ -86,10 +86,14 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
       expiresAt: refreshTokenExpiresAtDate,
     });
 
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
+    const refreshTokenCookieConfig = getRefreshTokenCookieConfig(
+      refreshTokenExpiresAtDate,
+    );
+
+    res.cookie(
+      refreshTokenCookieConfig.cookieTitle,
+      refreshToken,
+      refreshTokenCookieConfig.cookieOptions,
+    );
   }
 }
