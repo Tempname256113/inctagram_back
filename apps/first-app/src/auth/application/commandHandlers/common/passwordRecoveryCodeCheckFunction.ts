@@ -37,7 +37,7 @@ export class PasswordRecoveryCodeCheckFunction {
     );
 
     if (passwordRecoveryCodeIsExpired) {
-      await this.dependencies.userRepository.softDeleteUserChangePasswordRequest(
+      await this.dependencies.userRepository.softDeleteChangePasswordRequest(
         foundChangePasswordRequest.id,
       );
 

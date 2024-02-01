@@ -34,17 +34,17 @@ export class PasswordRecoveryHandler
     const foundChangePasswordRequest =
       await this.checkPasswordRecoveryCode(passwordRecoveryCode);
 
-    await this.userRepository.softDeleteUserChangePasswordRequest(
-      foundChangePasswordRequest.id,
-    );
-
     const passwordHash: string =
       await this.bcryptService.encryptPassword(newPassword);
 
-    await this.userRepository.changeUserPassword({
-      userId: foundChangePasswordRequest.userId,
-      password: passwordHash,
-    });
-    // TODO: add transactions, drop all sessions users, think about softDelete
+    await this.userRepository.softDeleteChangePasswordRequestAndChangePasswordTransaction(
+      {
+        changePasswordRequestId: foundChangePasswordRequest.id,
+        changePasswordData: {
+          userId: foundChangePasswordRequest.userId,
+          password: passwordHash,
+        },
+      },
+    );
   }
 }

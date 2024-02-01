@@ -40,13 +40,10 @@ export class SideAuthCommonFunctions {
     }
 
     if (user.userEmailInfo.provider !== provider) {
-      await this.dependencies.userRepository.updateUserEmailInfoByUserId(
-        user.id,
-        {
-          provider,
-          emailIsConfirmed: true,
-        },
-      );
+      await this.dependencies.userRepository.updateEmailInfoByUserId(user.id, {
+        provider,
+        emailIsConfirmed: true,
+      });
     }
 
     return user;
@@ -67,7 +64,7 @@ export class SideAuthCommonFunctions {
       refreshTokenPayload.exp * 1000,
     );
 
-    await this.dependencies.userRepository.createUserSession({
+    await this.dependencies.userRepository.createSession({
       userId,
       refreshTokenUuid: refreshTokenPayload.uuid,
       expiresAt: refreshTokenExpiresAtDate,

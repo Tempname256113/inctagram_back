@@ -40,7 +40,7 @@ export class CheckRegisterCodeHandler
       } as RegisterCodeCheckResponseTypeSwagger);
     }
 
-    await this.userRepository.updateUserEmailInfoByUserId(foundUser.id, {
+    await this.userRepository.updateEmailInfoByUserId(foundUser.id, {
       expiresAt: null,
       emailIsConfirmed: true,
       emailConfirmCode: null,
