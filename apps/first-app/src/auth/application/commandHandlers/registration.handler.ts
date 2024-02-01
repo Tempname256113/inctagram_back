@@ -56,7 +56,7 @@ export class RegistrationHandler
         if (userPasswordIsCorrect) {
           const emailConfirmCode: string = crypto.randomUUID();
 
-          await this.userRepository.updateUserEmailInfoByUserId(foundUser.id, {
+          await this.userRepository.updateEmailInfoByUserId(foundUser.id, {
             expiresAt: add(new Date(), { days: 3 }),
             emailConfirmCode,
           });

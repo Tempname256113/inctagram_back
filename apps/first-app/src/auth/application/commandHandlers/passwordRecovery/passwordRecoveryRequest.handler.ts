@@ -39,10 +39,9 @@ export class PasswordRecoveryRequestHandler
     }
 
     // при сбросе пароля надо сбросить пароль и сбросить активные сессии
-    await Promise.all([
-      this.userRepository.updateUserById(foundUser.id, { password: null }),
-      this.userRepository.deleteAllUserSessions(foundUser.id),
-    ]);
+    await this.userRepository.deleteUserPasswordAndDeleteAllSessionsTransaction(
+      foundUser.id,
+    );
 
     await this.sendChangePasswordMessageToUserEmail({
       userId: foundUser.id,
