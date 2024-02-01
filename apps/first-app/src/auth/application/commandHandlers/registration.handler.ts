@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RegisterDTO } from '../../dto/login.dto';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import { add } from 'date-fns';
@@ -7,6 +6,7 @@ import * as crypto from 'crypto';
 import { ConflictException } from '@nestjs/common';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
+import { RegisterDTO } from '../../dto/register.dto';
 
 export class RegistrationCommand {
   constructor(public readonly userRegisterDTO: RegisterDTO) {}
