@@ -9,15 +9,15 @@ import { RegisterCodeCheckRouteSwaggerDescription } from './controllers/auth/reg
 import { ResendRegisterEmailRouteSwaggerDescription } from './controllers/auth/resendRegisterEmail.route.swagger';
 import { PasswordRecoveryRouteSwaggerDescription } from './controllers/auth/passwordRecovery.route.swagger';
 
-export {
-  LoginRouteSwaggerDescription,
-  LogoutRouteSwaggerDescription,
-  PasswordRecoveryCodeCheckRouteSwaggerDescription,
-  PasswordRecoveryRequestRouteSwaggerDescription,
-  RegisterRouteSwaggerDescription,
-  UpdateTokensPairRouteSwaggerDescription,
-  SideAuthRouteSwaggerDescription,
-  RegisterCodeCheckRouteSwaggerDescription,
-  ResendRegisterEmailRouteSwaggerDescription,
-  PasswordRecoveryRouteSwaggerDescription,
-};
+// export {
+//   LoginRouteSwaggerDescription,
+//   LogoutRouteSwaggerDescription,
+//   PasswordRecoveryCodeCheckRouteSwaggerDescription,
+//   PasswordRecoveryRequestRouteSwaggerDescription,
+//   RegisterRouteSwaggerDescription,
+//   UpdateTokensPairRouteSwaggerDescription,
+//   SideAuthRouteSwaggerDescription,
+//   RegisterCodeCheckRouteSwaggerDescription,
+//   ResendRegisterEmailRouteSwaggerDescription,
+//   PasswordRecoveryRouteSwaggerDescription,
+// };

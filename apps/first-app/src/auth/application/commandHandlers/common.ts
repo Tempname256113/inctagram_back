@@ -10,16 +10,16 @@ import { CheckRegisterCodeCommand } from '../checkRegisterCode.handler';
 import { ResendRegisterEmailCommand } from './resendRegisterEmail.handler';
 import { PasswordRecoveryCommand } from './passwordRecovery/passwordRecovery.handler';
 
-export {
-  PasswordRecoveryRequestCommand,
-  PasswordRecoveryCodeCheckCommand,
-  RegistrationCommand,
-  LogoutCommand,
-  LoginCommand,
-  GithubAuthCommand,
-  GoogleAuthCommand,
-  UpdateTokensPairCommand,
-  CheckRegisterCodeCommand,
-  ResendRegisterEmailCommand,
-  PasswordRecoveryCommand,
-};
+// export {
+//   PasswordRecoveryRequestCommand,
+//   PasswordRecoveryCodeCheckCommand,
+//   RegistrationCommand,
+//   LogoutCommand,
+//   LoginCommand,
+//   GithubAuthCommand,
+//   GoogleAuthCommand,
+//   UpdateTokensPairCommand,
+//   CheckRegisterCodeCommand,
+//   ResendRegisterEmailCommand,
+//   PasswordRecoveryCommand,
+// };
