@@ -18,10 +18,10 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@shared/config/*": ["shared/config/*"],
-      "@shared/database/*": ["shared/database/*"],
-      "@swagger/auth": ["apps/first-app/src/auth/swagger/exports"],
-      "@commands/auth": ["apps/first-app/src/auth/application/commandHandlers/common"]
+//      "@shared/config/*": ["shared/config/*"],
+//      "@shared/database/*": ["shared/database/*"],
+//      "@swagger/auth": ["apps/first-app/src/auth/swagger/exports"],
+//      "@commands/auth": ["apps/first-app/src/auth/application/commandHandlers/common"]
     }
   }
 }

@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, UnauthorizedException } from '@nestjs/common';
-import authConfig from '@shared/config/auth.config.service';
+// import authConfig from '@shared/config/auth.config.service';
 import { ConfigType } from '@nestjs/config';
 import { Providers } from '@prisma/client';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
@@ -11,6 +11,7 @@ import axios from 'axios';
 import { Response } from 'express';
 import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
 import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
+import authConfig from '../../../../../../shared/config/auth.config.service';
 
 export class GithubAuthCommand {
   constructor(public readonly data: { githubCode: string; res: Response }) {}

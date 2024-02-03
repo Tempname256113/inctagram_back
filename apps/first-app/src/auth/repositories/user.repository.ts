@@ -6,7 +6,8 @@ import {
   UserEmailInfo,
   UserSession,
 } from '@prisma/client';
-import { PrismaService } from '@shared/database/prisma.service';
+// import { PrismaService } from '@shared/database/prisma.service';
+import { PrismaService } from '../../../../../shared/database/prisma.service';
 
 @Injectable()
 export class UserRepository {
