@@ -63,7 +63,7 @@ export class AuthController {
 
   @Get('temp256113')
   async sendRegEmailTest() {
-    return this.nodemailerService.sendRegistrationSuccessfulMessage(
+    await this.nodemailerService.sendRegistrationSuccessfulMessage(
       'smolnikov.456@mail.ru',
     );
   }

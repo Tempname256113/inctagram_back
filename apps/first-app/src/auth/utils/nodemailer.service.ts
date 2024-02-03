@@ -70,8 +70,7 @@ export class NodemailerService {
       return this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
-        // subject: 'Successful registration',
-        subject: 'remote host email',
+        subject: 'Successful registration',
         html: `Thank you for registration on inctagram`,
       });
     } catch (err) {
