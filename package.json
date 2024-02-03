@@ -25,8 +25,7 @@
     "prisma_db_pull": "dotenv -e ./config/env/.env.development -- yarn prisma db pull",
     "build:first-app": "nest build first-app",
     "start:first-app": "node dist/apps/first-app/main",
-    "start:dev:first-app": "nest start first-app --watch",
-    "postinstall": "prisma generate"
+    "start:dev:first-app": "nest start first-app --watch"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
