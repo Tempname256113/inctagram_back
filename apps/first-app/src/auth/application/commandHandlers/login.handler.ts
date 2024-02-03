@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UserLoginDTO } from '../../dto/user.dto';
+import { LoginDTO } from '../../dto/login.dto';
 import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { USER_ERRORS } from '../../variables/validationErrors.messages';
@@ -7,13 +7,13 @@ import { Response } from 'express';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 import { TokensService } from '../../utils/tokens.service';
 import { RefreshTokenPayloadType } from '../../types/tokens.models';
-import { refreshTokenCookieProp } from '../../variables/refreshToken.variable';
 import * as crypto from 'crypto';
 import { UserRepository } from '../../repositories/user.repository';
+import { getRefreshTokenCookieConfig } from '../../variables/refreshToken.config';
 
 export class LoginCommand {
   constructor(
-    public readonly data: { userLoginDTO: UserLoginDTO; res: Response },
+    public readonly data: { userLoginDTO: LoginDTO; res: Response },
   ) {}
 }
 
@@ -43,7 +43,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
     res.status(HttpStatus.OK).send({ accessToken });
   }
 
-  async getUser(userLoginDTO: UserLoginDTO) {
+  async getUser(userLoginDTO: LoginDTO) {
     const foundUser = await this.userQueryRepository.getUserByEmail(
       userLoginDTO.email,
     );
@@ -80,16 +80,20 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
       refreshTokenPayload.exp * 1000,
     );
 
-    await this.userRepository.createUserSession({
+    await this.userRepository.createSession({
       userId,
       refreshTokenUuid: refreshTokenPayload.uuid,
       expiresAt: refreshTokenExpiresAtDate,
     });
 
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
+    const refreshTokenCookieConfig = getRefreshTokenCookieConfig(
+      refreshTokenExpiresAtDate,
+    );
+
+    res.cookie(
+      refreshTokenCookieConfig.cookieTitle,
+      refreshToken,
+      refreshTokenCookieConfig.cookieOptions,
+    );
   }
 }

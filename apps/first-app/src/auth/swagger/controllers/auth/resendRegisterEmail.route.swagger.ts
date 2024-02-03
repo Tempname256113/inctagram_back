@@ -5,7 +5,7 @@ import {
   ApiNoContentResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { ResendRegisterEmailDtoSwagger } from '../../dto/resendRegisterEmail.dto.swagger';
+import { ResendRegisterEmailDtoSwagger } from '../../../dto/register.dto';
 
 export const ResendRegisterEmailRouteSwaggerDescription = () => {
   return applyDecorators(

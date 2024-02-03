@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UserRegisterDTO } from '../../dto/user.dto';
 import { BcryptService } from '../../utils/bcrypt.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import { add } from 'date-fns';
@@ -7,9 +6,10 @@ import * as crypto from 'crypto';
 import { ConflictException } from '@nestjs/common';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
+import { RegisterDTO } from '../../dto/register.dto';
 
 export class RegistrationCommand {
-  constructor(public readonly userRegisterDTO: UserRegisterDTO) {}
+  constructor(public readonly userRegisterDTO: RegisterDTO) {}
 }
 
 @CommandHandler(RegistrationCommand)
@@ -56,7 +56,7 @@ export class RegistrationHandler
         if (userPasswordIsCorrect) {
           const emailConfirmCode: string = crypto.randomUUID();
 
-          await this.userRepository.updateUserEmailInfoByUserId(foundUser.id, {
+          await this.userRepository.updateEmailInfoByUserId(foundUser.id, {
             expiresAt: add(new Date(), { days: 3 }),
             emailConfirmCode,
           });
@@ -82,7 +82,7 @@ export class RegistrationHandler
     return 'Need to create a new user';
   }
 
-  async registerNewUser(userRegisterDTO: UserRegisterDTO): Promise<void> {
+  async registerNewUser(userRegisterDTO: RegisterDTO): Promise<void> {
     const { username, email, password } = userRegisterDTO;
 
     const createNewUserOrNot = await this.checkUsernameAndEmail({

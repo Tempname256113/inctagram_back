@@ -8,10 +8,10 @@ import { NotFoundException } from '@nestjs/common';
 import { USER_ERRORS } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
 import { RecaptchaService } from '../../../utils/recaptcha.service';
-import { UserPasswordRecoveryRequestDTO } from '../../../dto/passwordRecovery.dto';
+import { PasswordRecoveryRequestDTO } from '../../../dto/passwordRecovery.dto';
 
 export class PasswordRecoveryRequestCommand {
-  constructor(public readonly data: UserPasswordRecoveryRequestDTO) {}
+  constructor(public readonly data: PasswordRecoveryRequestDTO) {}
 }
 
 @CommandHandler(PasswordRecoveryRequestCommand)
@@ -39,10 +39,9 @@ export class PasswordRecoveryRequestHandler
     }
 
     // при сбросе пароля надо сбросить пароль и сбросить активные сессии
-    await Promise.all([
-      this.userRepository.updateUserById(foundUser.id, { password: null }),
-      this.userRepository.deleteAllUserSessions(foundUser.id),
-    ]);
+    await this.userRepository.deleteUserPasswordAndDeleteAllSessionsTransaction(
+      foundUser.id,
+    );
 
     await this.sendChangePasswordMessageToUserEmail({
       userId: foundUser.id,

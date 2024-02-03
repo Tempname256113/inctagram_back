@@ -18,10 +18,9 @@ export class NodemailerService {
     this.frontendUrl = this.config.FRONTEND_URL;
 
     this.transporter = createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      host: 'smtp.mail.ru',
+      port: 465,
+      secure: true,
       auth: {
         user: this.config.EMAIL_USER,
         pass: this.config.EMAIL_PASS,

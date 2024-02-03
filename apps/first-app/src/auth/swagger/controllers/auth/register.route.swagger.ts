@@ -4,7 +4,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
-import { UserRegisterDtoSwagger } from '../../dto/user.dto.swagger';
+import { RegisterDtoSwagger } from '../../../dto/register.dto';
 
 export const RegisterRouteSwaggerDescription = () => {
   return applyDecorators(
@@ -15,6 +15,6 @@ export const RegisterRouteSwaggerDescription = () => {
       description:
         'The user with provided username or email already registered',
     }),
-    ApiBody({ type: UserRegisterDtoSwagger }),
+    ApiBody({ type: RegisterDtoSwagger }),
   );
 };

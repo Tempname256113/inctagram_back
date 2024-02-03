@@ -4,7 +4,7 @@ import { GoneException, NotFoundException } from '@nestjs/common';
 import { isBefore } from 'date-fns';
 import { UserRepository } from '../repositories/user.repository';
 import { NodemailerService } from '../utils/nodemailer.service';
-import { RegisterCodeCheckResponseTypeSwagger } from '../swagger/dto/registerCodeCheckResponseType.swagger';
+import { RegisterCodeCheckResponseTypeSwagger } from '../dto/register.dto';
 
 export class CheckRegisterCodeCommand {
   constructor(public readonly code: string) {}
@@ -40,7 +40,7 @@ export class CheckRegisterCodeHandler
       } as RegisterCodeCheckResponseTypeSwagger);
     }
 
-    await this.userRepository.updateUserEmailInfoByUserId(foundUser.id, {
+    await this.userRepository.updateEmailInfoByUserId(foundUser.id, {
       expiresAt: null,
       emailIsConfirmed: true,
       emailConfirmCode: null,

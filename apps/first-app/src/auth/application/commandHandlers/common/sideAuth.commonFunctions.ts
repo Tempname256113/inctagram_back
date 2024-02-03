@@ -4,9 +4,9 @@ import { TokensService } from '../../../utils/tokens.service';
 import { NodemailerService } from '../../../utils/nodemailer.service';
 import { Response } from 'express';
 import { RefreshTokenPayloadType } from '../../../types/tokens.models';
-import { refreshTokenCookieProp } from '../../../variables/refreshToken.variable';
 import { Providers } from '@prisma/client';
 import * as crypto from 'crypto';
+import { getRefreshTokenCookieConfig } from '../../../variables/refreshToken.config';
 
 export class SideAuthCommonFunctions {
   constructor(
@@ -40,13 +40,10 @@ export class SideAuthCommonFunctions {
     }
 
     if (user.userEmailInfo.provider !== provider) {
-      await this.dependencies.userRepository.updateUserEmailInfoByUserId(
-        user.id,
-        {
-          provider,
-          emailIsConfirmed: true,
-        },
-      );
+      await this.dependencies.userRepository.updateEmailInfoByUserId(user.id, {
+        provider,
+        emailIsConfirmed: true,
+      });
     }
 
     return user;
@@ -67,16 +64,20 @@ export class SideAuthCommonFunctions {
       refreshTokenPayload.exp * 1000,
     );
 
-    await this.dependencies.userRepository.createUserSession({
+    await this.dependencies.userRepository.createSession({
       userId,
       refreshTokenUuid: refreshTokenPayload.uuid,
       expiresAt: refreshTokenExpiresAtDate,
     });
 
-    res.cookie(refreshTokenCookieProp, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      expires: refreshTokenExpiresAtDate,
-    });
+    const refreshTokenCookieConfig = getRefreshTokenCookieConfig(
+      refreshTokenExpiresAtDate,
+    );
+
+    res.cookie(
+      refreshTokenCookieConfig.cookieTitle,
+      refreshToken,
+      refreshTokenCookieConfig.cookieOptions,
+    );
   }
 }

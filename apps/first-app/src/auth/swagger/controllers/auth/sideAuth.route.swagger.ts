@@ -5,14 +5,14 @@ import {
   ApiOkResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { SideAuthReturnUserInfoTypeSwagger } from '../../dto/sideAuth.returnUserInfoType.swagger';
-import { SideAuthResponseDtoSwagger } from '../../dto/sideAuthResponse.dto.swagger';
+import { SideAuthDtoSwagger } from '../../../dto/sideAuth.dto';
+import { SideAuthResponseTypeSwagger } from '../../../dto/response/sideAuth.responseType';
 
 export const SideAuthRouteSwaggerDescription = () => {
   return applyDecorators(
     ApiOkResponse({
       description: 'Successful login/registration',
-      type: SideAuthReturnUserInfoTypeSwagger,
+      type: SideAuthResponseTypeSwagger,
     }),
     ApiBadRequestResponse({
       description: 'Provided incorrect auth code',
@@ -20,6 +20,6 @@ export const SideAuthRouteSwaggerDescription = () => {
     ApiUnauthorizedResponse({
       description: 'Provided invalid auth code',
     }),
-    ApiBody({ type: SideAuthResponseDtoSwagger, required: true }),
+    ApiBody({ type: SideAuthDtoSwagger, required: true }),
   );
 };
