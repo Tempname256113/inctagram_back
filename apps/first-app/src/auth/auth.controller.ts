@@ -73,7 +73,6 @@ import { SideAuthRouteSwaggerDescription } from './swagger/controllers/auth/side
 import { GoogleAuthCommand } from './application/commandHandlers/googleAuth.handler';
 import { GithubAuthCommand } from './application/commandHandlers/githubAuth.handler';
 
-// надо чтобы задеплоить
 @Controller('auth')
 @ApiTags('auth controllers')
 export class AuthController {
