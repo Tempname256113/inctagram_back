@@ -29,7 +29,7 @@ import {
   UpdateTokensPairRouteSwaggerDescription,
   ResendRegisterEmailRouteSwaggerDescription,
   PasswordRecoveryRouteSwaggerDescription,
-} from '@swagger/auth';
+} from '@swaggerDocs/auth';
 import {
   CheckRegisterCodeCommand,
   GithubAuthCommand,
