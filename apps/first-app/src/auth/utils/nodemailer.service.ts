@@ -6,7 +6,7 @@ import appConfig from '../../../../../shared/config/app.config.service';
 
 @Injectable()
 export class NodemailerService {
-  private readonly transporter: Transporter<SMTPTransport.SentMessageInfo>;
+  private transporter: Transporter<SMTPTransport.SentMessageInfo>;
   private readonly nodemailerEmailUser: string;
   private readonly frontendUrl: string;
 
@@ -16,16 +16,6 @@ export class NodemailerService {
   ) {
     this.nodemailerEmailUser = this.config.EMAIL_USER;
     this.frontendUrl = this.config.FRONTEND_URL;
-
-    this.transporter = createTransport({
-      host: 'smtp.mail.ru',
-      port: 465,
-      secure: true,
-      auth: {
-        user: this.config.EMAIL_USER,
-        pass: this.config.EMAIL_PASS,
-      },
-    });
   }
 
   async sendRegistrationConfirmMessage(data: {
@@ -67,6 +57,16 @@ export class NodemailerService {
 
   async sendRegistrationSuccessfulMessage(email: string): Promise<void> {
     try {
+      this.transporter = createTransport({
+        host: 'smtp.mail.ru',
+        port: 465,
+        secure: true,
+        auth: {
+          user: this.config.EMAIL_USER,
+          pass: this.config.EMAIL_PASS,
+        },
+      });
+
       await this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
