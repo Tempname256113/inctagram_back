@@ -1,5 +1,5 @@
 import { ConfigService, ConfigType } from '@nestjs/config';
-// import appConfig from '@shared/config/app.config.service';
+import appConfig from '@shared/config/app.config.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { add, getUnixTime } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
@@ -8,7 +8,6 @@ import {
   RefreshTokenPayloadType,
 } from '../types/tokens.models';
 import * as crypto from 'crypto';
-import appConfig from '../../../../../shared/config/app.config.service';
 
 @Injectable()
 export class TokensService {

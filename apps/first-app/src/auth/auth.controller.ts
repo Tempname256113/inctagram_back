@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -17,31 +18,31 @@ import {
 import { Cookies } from './decorators/cookies.decorator';
 import { Response as Res } from 'express';
 import { ApiTags } from '@nestjs/swagger';
-// import {
-//   LoginRouteSwaggerDescription,
-//   LogoutRouteSwaggerDescription,
-//   PasswordRecoveryRequestRouteSwaggerDescription,
-//   PasswordRecoveryCodeCheckRouteSwaggerDescription,
-//   RegisterCodeCheckRouteSwaggerDescription,
-//   RegisterRouteSwaggerDescription,
-//   SideAuthRouteSwaggerDescription,
-//   UpdateTokensPairRouteSwaggerDescription,
-//   ResendRegisterEmailRouteSwaggerDescription,
-//   PasswordRecoveryRouteSwaggerDescription,
-// } from '@swagger/auth';
-// import {
-//   CheckRegisterCodeCommand,
-//   GithubAuthCommand,
-//   GoogleAuthCommand,
-//   LoginCommand,
-//   LogoutCommand,
-//   PasswordRecoveryCodeCheckCommand,
-//   PasswordRecoveryCommand,
-//   PasswordRecoveryRequestCommand,
-//   RegistrationCommand,
-//   ResendRegisterEmailCommand,
-//   UpdateTokensPairCommand,
-// } from '@commands/auth';
+import {
+  LoginRouteSwaggerDescription,
+  LogoutRouteSwaggerDescription,
+  PasswordRecoveryRequestRouteSwaggerDescription,
+  PasswordRecoveryCodeCheckRouteSwaggerDescription,
+  RegisterCodeCheckRouteSwaggerDescription,
+  RegisterRouteSwaggerDescription,
+  SideAuthRouteSwaggerDescription,
+  UpdateTokensPairRouteSwaggerDescription,
+  ResendRegisterEmailRouteSwaggerDescription,
+  PasswordRecoveryRouteSwaggerDescription,
+} from '@swagger/auth';
+import {
+  CheckRegisterCodeCommand,
+  GithubAuthCommand,
+  GoogleAuthCommand,
+  LoginCommand,
+  LogoutCommand,
+  PasswordRecoveryCodeCheckCommand,
+  PasswordRecoveryCommand,
+  PasswordRecoveryRequestCommand,
+  RegistrationCommand,
+  ResendRegisterEmailCommand,
+  UpdateTokensPairCommand,
+} from '@commands/auth';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
 import {
@@ -50,33 +51,22 @@ import {
   ResendRegisterEmailDto,
 } from './dto/register.dto';
 import { refreshTokenCookieTitle } from './variables/refreshToken.config';
-
-import { RegisterRouteSwaggerDescription } from './swagger/controllers/auth/register.route.swagger';
-import { RegistrationCommand } from './application/commandHandlers/registration.handler';
-import { RegisterCodeCheckRouteSwaggerDescription } from './swagger/controllers/auth/registerCodeCheck.route.swagger';
-import { CheckRegisterCodeCommand } from './application/checkRegisterCode.handler';
-import { ResendRegisterEmailRouteSwaggerDescription } from './swagger/controllers/auth/resendRegisterEmail.route.swagger';
-import { ResendRegisterEmailCommand } from './application/commandHandlers/resendRegisterEmail.handler';
-import { LoginRouteSwaggerDescription } from './swagger/controllers/auth/login.route.swagger';
-import { LoginCommand } from './application/commandHandlers/login.handler';
-import { UpdateTokensPairRouteSwaggerDescription } from './swagger/controllers/auth/updateTokensPair.route.swagger';
-import { UpdateTokensPairCommand } from './application/commandHandlers/updateTokensPair.handler';
-import { LogoutRouteSwaggerDescription } from './swagger/controllers/auth/logout.route.swagger';
-import { LogoutCommand } from './application/commandHandlers/logout.handler';
-import { PasswordRecoveryRequestRouteSwaggerDescription } from './swagger/controllers/auth/passwordRecoveryRequest.route.swagger';
-import { PasswordRecoveryRequestCommand } from './application/commandHandlers/passwordRecovery/passwordRecoveryRequest.handler';
-import { PasswordRecoveryCodeCheckRouteSwaggerDescription } from './swagger/controllers/auth/passwordRecoveryCodeCheck.route.swagger';
-import { PasswordRecoveryCodeCheckCommand } from './application/commandHandlers/passwordRecovery/passwordRecoveryCodeCheck.handler';
-import { PasswordRecoveryRouteSwaggerDescription } from './swagger/controllers/auth/passwordRecovery.route.swagger';
-import { PasswordRecoveryCommand } from './application/commandHandlers/passwordRecovery/passwordRecovery.handler';
-import { SideAuthRouteSwaggerDescription } from './swagger/controllers/auth/sideAuth.route.swagger';
-import { GoogleAuthCommand } from './application/commandHandlers/googleAuth.handler';
-import { GithubAuthCommand } from './application/commandHandlers/githubAuth.handler';
+import { NodemailerService } from './utils/nodemailer.service';
 
 @Controller('auth')
 @ApiTags('auth controllers')
 export class AuthController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly nodemailerService: NodemailerService,
+  ) {}
+
+  @Get('temp256113')
+  async sendRegEmailTest() {
+    this.nodemailerService.sendRegistrationSuccessfulMessage(
+      'smonlikov.456@mail.ru',
+    );
+  }
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)

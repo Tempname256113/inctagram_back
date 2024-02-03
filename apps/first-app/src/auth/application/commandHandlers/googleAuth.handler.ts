@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
 import { Inject, UnauthorizedException } from '@nestjs/common';
-// import authConfig from '@shared/config/auth.config.service';
+import authConfig from '@shared/config/auth.config.service';
 import { ConfigType } from '@nestjs/config';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 import { UserRepository } from '../../repositories/user.repository';
@@ -11,7 +11,6 @@ import { Response as Res } from 'express';
 import axios from 'axios';
 import { Providers } from '@prisma/client';
 import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
-import authConfig from '../../../../../../shared/config/auth.config.service';
 
 export class GoogleAuthCommand {
   constructor(public readonly data: { googleCode: string; res: Res }) {}
