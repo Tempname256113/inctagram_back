@@ -20,6 +20,7 @@ export class NodemailerService {
     this.transporter = createTransport({
       host: 'smtp.mail.ru',
       port: 465,
+      secure: true,
       auth: {
         user: this.config.EMAIL_USER,
         pass: this.config.EMAIL_PASS,
@@ -64,12 +65,13 @@ export class NodemailerService {
     }
   }
 
-  async sendRegistrationSuccessfulMessage(email: string): Promise<void> {
+  async sendRegistrationSuccessfulMessage(email: string) {
     try {
-      await this.transporter.sendMail({
+      return this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
-        subject: 'Successful registration',
+        // subject: 'Successful registration',
+        subject: 'remote host email',
         html: `Thank you for registration on inctagram`,
       });
     } catch (err) {
