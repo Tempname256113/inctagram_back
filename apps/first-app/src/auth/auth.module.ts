@@ -10,7 +10,7 @@ import { LoginHandler } from './application/commandHandlers/login.handler';
 import { PasswordRecoveryCodeCheckHandler } from './application/commandHandlers/passwordRecovery/passwordRecoveryCodeCheck.handler';
 import { UserRepository } from './repositories/user.repository';
 import { UserQueryRepository } from './repositories/query/user.queryRepository';
-import { PrismaService } from '@shared/database/prisma.service';
+import { PrismaService } from 'shared/database/prisma.service';
 import { PasswordRecoveryRequestHandler } from './application/commandHandlers/passwordRecovery/passwordRecoveryRequest.handler';
 import { GithubAuthHandler } from './application/commandHandlers/githubAuth.handler';
 import { GoogleAuthHandler } from './application/commandHandlers/googleAuth.handler';

@@ -29,7 +29,7 @@ import {
   UpdateTokensPairRouteSwaggerDescription,
   ResendRegisterEmailRouteSwaggerDescription,
   PasswordRecoveryRouteSwaggerDescription,
-} from '@swaggerDocs/auth';
+} from 'swagger/auth';
 import {
   CheckRegisterCodeCommand,
   GithubAuthCommand,
@@ -42,7 +42,7 @@ import {
   RegistrationCommand,
   ResendRegisterEmailCommand,
   UpdateTokensPairCommand,
-} from '@commands/auth';
+} from 'commands/auth';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
 import {
