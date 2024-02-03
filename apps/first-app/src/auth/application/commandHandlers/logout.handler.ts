@@ -24,7 +24,7 @@ export class LogoutHandler implements ICommandHandler<LogoutCommand, void> {
       throw new UnauthorizedException('Refresh token is invalid');
     }
 
-    await this.userRepository.deleteUserSession({
+    await this.userRepository.deleteSession({
       userId: refreshTokenPayload.userId,
       refreshTokenUuid: refreshTokenPayload.uuid,
     });

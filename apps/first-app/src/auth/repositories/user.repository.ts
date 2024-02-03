@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import {
   Providers,
   User,
@@ -34,24 +34,30 @@ export class UserRepository {
       emailIsConfirmed,
     } = userCreateDTO.emailInfo;
 
-    const newUser = await this.prisma.user.create({
-      data: {
-        username,
-        email,
-        password,
-        userEmailInfo: {
-          create: {
-            provider,
-            emailIsConfirmed,
-            expiresAt: registrationCodeEndDate,
-            emailConfirmCode: registrationConfirmCode,
+    try {
+      const newUser = await this.prisma.user.create({
+        data: {
+          username,
+          email,
+          password,
+          userEmailInfo: {
+            create: {
+              provider,
+              emailIsConfirmed,
+              expiresAt: registrationCodeEndDate,
+              emailConfirmCode: registrationConfirmCode,
+            },
           },
         },
-      },
-      include: { userEmailInfo: true },
-    });
+        include: { userEmailInfo: true },
+      });
 
-    return newUser;
+      return newUser;
+    } catch (err) {
+      throw new BadRequestException({
+        message: 'I cant create new user. Check your provided data',
+      });
+    }
   }
 
   async updateUserById(
@@ -61,10 +67,7 @@ export class UserRepository {
     return this.prisma.user.update({ where: { id: userId }, data });
   }
 
-  async updateUserEmailInfoByUserId(
-    userId: number,
-    data: Partial<UserEmailInfo>,
-  ) {
+  async updateEmailInfoByUserId(userId: number, data: Partial<UserEmailInfo>) {
     return this.prisma.userEmailInfo.update({ where: { userId }, data });
   }
 
@@ -97,7 +100,7 @@ export class UserRepository {
     });
   }
 
-  async softDeleteUserChangePasswordRequest(requestId: number): Promise<void> {
+  async softDeleteChangePasswordRequest(requestId: number): Promise<void> {
     await this.prisma.userChangePasswordRequest.update({
       where: { id: requestId },
       data: {
@@ -106,14 +109,29 @@ export class UserRepository {
     });
   }
 
-  async changeUserPassword(data: { userId: number; password: string }) {
+  async changePassword(data: { userId: number; password: string }) {
     return this.prisma.user.update({
       where: { id: data.userId },
       data: { password: data.password },
     });
   }
 
-  async createUserSession(data: {
+  async softDeleteChangePasswordRequestAndChangePasswordTransaction(data: {
+    changePasswordRequestId: number;
+    changePasswordData: { userId: number; password: string };
+  }) {
+    await this.prisma.$transaction(async (prisma) => {
+      await Promise.all([
+        this.softDeleteChangePasswordRequest(data.changePasswordRequestId),
+        this.changePassword({
+          userId: data.changePasswordData.userId,
+          password: data.changePasswordData.password,
+        }),
+      ]);
+    });
+  }
+
+  async createSession(data: {
     userId: number;
     refreshTokenUuid: string;
     expiresAt: Date;
@@ -127,7 +145,7 @@ export class UserRepository {
     });
   }
 
-  async updateUserSession(data: {
+  async updateSession(data: {
     userId: number;
     currentRefreshTokenUuid: string;
     newRefreshTokenUuid: string;
@@ -145,7 +163,7 @@ export class UserRepository {
     });
   }
 
-  async deleteUserSession(data: {
+  async deleteSession(data: {
     userId: number;
     refreshTokenUuid: string;
   }): Promise<void> {
@@ -154,7 +172,16 @@ export class UserRepository {
     });
   }
 
-  async deleteAllUserSessions(userId: number) {
+  async deleteAllSessions(userId: number) {
     return this.prisma.userSession.deleteMany({ where: { userId } });
+  }
+
+  async deleteUserPasswordAndDeleteAllSessionsTransaction(userId: number) {
+    await this.prisma.$transaction(async (prisma) => {
+      await Promise.all([
+        this.updateUserById(userId, { password: null }),
+        this.deleteAllSessions(userId),
+      ]);
+    });
   }
 }

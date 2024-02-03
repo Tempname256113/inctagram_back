@@ -80,7 +80,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
       refreshTokenPayload.exp * 1000,
     );
 
-    await this.userRepository.createUserSession({
+    await this.userRepository.createSession({
       userId,
       refreshTokenUuid: refreshTokenPayload.uuid,
       expiresAt: refreshTokenExpiresAtDate,

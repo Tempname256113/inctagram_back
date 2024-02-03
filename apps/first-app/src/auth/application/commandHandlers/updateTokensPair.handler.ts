@@ -43,7 +43,7 @@ export class UpdateTokensPairHandler
       newRefreshTokenPayload.exp * 1000,
     );
 
-    const updatedSessionsAmount = await this.userRepository.updateUserSession({
+    const updatedSessionsAmount = await this.userRepository.updateSession({
       userId: newRefreshTokenPayload.userId,
       currentRefreshTokenUuid: refreshTokenPayload.uuid,
       newRefreshTokenUuid: newRefreshTokenPayload.uuid,
