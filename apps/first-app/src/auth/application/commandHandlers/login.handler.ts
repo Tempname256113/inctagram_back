@@ -9,7 +9,6 @@ import { TokensService } from '../../utils/tokens.service';
 import { RefreshTokenPayloadType } from '../../types/tokens.models';
 import * as crypto from 'crypto';
 import { UserRepository } from '../../repositories/user.repository';
-import { getRefreshTokenCookieConfig } from '../../variables/refreshToken.config';
 
 export class LoginCommand {
   constructor(
@@ -86,14 +85,6 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
       expiresAt: refreshTokenExpiresAtDate,
     });
 
-    const refreshTokenCookieConfig = getRefreshTokenCookieConfig(
-      refreshTokenExpiresAtDate,
-    );
-
-    res.cookie(
-      refreshTokenCookieConfig.cookieTitle,
-      refreshToken,
-      refreshTokenCookieConfig.cookieOptions,
-    );
+    await this.tokensService.setRefreshTokenInCookie({ refreshToken, res });
   }
 }

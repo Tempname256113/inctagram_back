@@ -148,7 +148,6 @@ export class UserRepository {
   async updateSession(data: {
     userId: number;
     currentRefreshTokenUuid: string;
-    newRefreshTokenUuid: string;
     refreshTokenExpiresAt: Date;
   }) {
     return this.prisma.userSession.updateMany({
@@ -157,7 +156,6 @@ export class UserRepository {
         refreshTokenUuid: data.currentRefreshTokenUuid,
       },
       data: {
-        refreshTokenUuid: data.newRefreshTokenUuid,
         expiresAt: data.refreshTokenExpiresAt,
       },
     });

@@ -13,7 +13,13 @@ import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
 import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
 
 export class GithubAuthCommand {
-  constructor(public readonly data: { githubCode: string; res: Response }) {}
+  constructor(
+    public readonly data: {
+      githubCode: string;
+      res: Response;
+      refreshToken: string | undefined;
+    },
+  ) {}
 }
 
 @CommandHandler(GithubAuthCommand)
@@ -39,7 +45,7 @@ export class GithubAuthHandler
 
   async execute(command: GithubAuthCommand): Promise<SideAuthResponseType> {
     const {
-      data: { githubCode, res },
+      data: { githubCode, res, refreshToken },
     } = command;
 
     const userInfoFromGithub = await this.getUserInfoFromGithub(githubCode);
@@ -50,7 +56,15 @@ export class GithubAuthHandler
       provider: Providers.Github,
     });
 
-    await this.createUserSession(userFromDB.id, res);
+    // если использует клиент роут для логина через сторонние апи
+    // надо проверить есть у него уже рефреш токен или нет
+    // если есть то не надо создавать новую сессию чтобы засорять базу
+    // надо обновить существующую сессию
+    if (refreshToken) {
+      await this.updateUserSession({ refreshToken, res });
+    } else {
+      await this.createUserSession({ userId: userFromDB.id, res });
+    }
 
     return {
       userId: userFromDB.id,

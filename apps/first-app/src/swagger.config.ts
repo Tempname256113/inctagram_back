@@ -1,6 +1,6 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
-import { refreshTokenCookieTitle } from './auth/variables/refreshToken.config';
+import { refreshTokenCookieTitle } from './auth/variables/refreshTokenTitle';
 
 export class SwaggerConfig {
   constructor(private readonly app: INestApplication) {}

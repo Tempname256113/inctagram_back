@@ -6,7 +6,6 @@ import { Response } from 'express';
 import { RefreshTokenPayloadType } from '../../../types/tokens.models';
 import { Providers } from '@prisma/client';
 import * as crypto from 'crypto';
-import { getRefreshTokenCookieConfig } from '../../../variables/refreshToken.config';
 
 export class SideAuthCommonFunctions {
   constructor(
@@ -49,7 +48,12 @@ export class SideAuthCommonFunctions {
     return user;
   }
 
-  async createUserSession(userId: number, res: Response): Promise<void> {
+  async createUserSession(data: {
+    userId: number;
+    res: Response;
+  }): Promise<void> {
+    const { userId, res } = data;
+
     const refreshToken: string =
       await this.dependencies.tokensService.createRefreshToken({
         userId,
@@ -70,14 +74,47 @@ export class SideAuthCommonFunctions {
       expiresAt: refreshTokenExpiresAtDate,
     });
 
-    const refreshTokenCookieConfig = getRefreshTokenCookieConfig(
-      refreshTokenExpiresAtDate,
+    this.dependencies.tokensService.setRefreshTokenInCookie({
+      refreshToken,
+      res,
+    });
+  }
+
+  async updateUserSession(data: {
+    refreshToken: string;
+    res: Response;
+  }): Promise<void> {
+    const { refreshToken, res } = data;
+
+    const providedRefreshTokenPayload: RefreshTokenPayloadType =
+      this.dependencies.tokensService.getTokenPayload(refreshToken);
+
+    const { userId, uuid: currentRefreshTokenUuid } =
+      providedRefreshTokenPayload;
+
+    const newRefreshToken: string =
+      await this.dependencies.tokensService.createRefreshToken({
+        userId,
+        uuid: currentRefreshTokenUuid,
+      });
+
+    const newRefreshTokenPayload: RefreshTokenPayloadType =
+      this.dependencies.tokensService.getTokenPayload(newRefreshToken);
+
+    // так как в JWT токене время в секундах, то его надо перевести в миллисекунды
+    const newRefreshTokenExpiresAtDate: Date = new Date(
+      newRefreshTokenPayload.exp * 1000,
     );
 
-    res.cookie(
-      refreshTokenCookieConfig.cookieTitle,
-      refreshToken,
-      refreshTokenCookieConfig.cookieOptions,
-    );
+    await this.dependencies.userRepository.updateSession({
+      userId,
+      refreshTokenExpiresAt: newRefreshTokenExpiresAtDate,
+      currentRefreshTokenUuid,
+    });
+
+    this.dependencies.tokensService.setRefreshTokenInCookie({
+      refreshToken: newRefreshToken,
+      res,
+    });
   }
 }
