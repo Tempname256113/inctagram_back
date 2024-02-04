@@ -31,11 +31,11 @@ export class NodemailerService {
   async sendRegistrationConfirmMessage(data: {
     email: string;
     confirmCode: string;
-  }): Promise<void> {
+  }) {
     const { email, confirmCode } = data;
 
     try {
-      await this.transporter.sendMail({
+      return this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Confirm your registration please',
@@ -54,7 +54,7 @@ export class NodemailerService {
     userPasswordRecoveryCode: string;
   }) {
     try {
-      await this.transporter.sendMail({
+      return this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Password recovery',

@@ -63,8 +63,8 @@ export class PasswordRecoveryRequestHandler
     const passwordRecoveryCode: string = crypto.randomUUID();
     const expiresAt: Date = add(new Date(), { days: 1 });
 
-    const sendEmailMessage = (): void => {
-      this.nodemailerService.sendChangePasswordRequestMessage({
+    const sendEmailMessage = async () => {
+      return this.nodemailerService.sendChangePasswordRequestMessage({
         email: data.email,
         userPasswordRecoveryCode: passwordRecoveryCode,
       });
@@ -80,7 +80,7 @@ export class PasswordRecoveryRequestHandler
         },
       );
 
-      sendEmailMessage();
+      await sendEmailMessage();
     } else {
       await this.userRepository.createUserChangePasswordRequest({
         userId: data.userId,
@@ -88,7 +88,7 @@ export class PasswordRecoveryRequestHandler
         expiresAt,
       });
 
-      sendEmailMessage();
+      await sendEmailMessage();
     }
   }
 }
