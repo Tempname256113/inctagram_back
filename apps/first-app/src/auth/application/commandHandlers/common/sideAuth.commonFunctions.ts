@@ -34,7 +34,7 @@ export class SideAuthCommonFunctions {
         emailInfo: { provider, emailIsConfirmed: true },
       });
 
-      this.dependencies.nodemailerService.sendRegistrationSuccessfulMessage(
+      await this.dependencies.nodemailerService.sendRegistrationSuccessfulMessage(
         user.email,
       );
     }

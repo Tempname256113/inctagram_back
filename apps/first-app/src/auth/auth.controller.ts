@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -51,22 +50,11 @@ import {
   ResendRegisterEmailDto,
 } from './dto/register.dto';
 import { refreshTokenCookieTitle } from './variables/refreshToken.config';
-import { NodemailerService } from './utils/nodemailer.service';
 
 @Controller('auth')
 @ApiTags('auth controllers')
 export class AuthController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly nodemailerService: NodemailerService,
-  ) {}
-
-  @Get('temp256113')
-  async sendRegEmailTest() {
-    await this.nodemailerService.sendRegistrationSuccessfulMessage(
-      'smolnikov.456@mail.ru',
-    );
-  }
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)

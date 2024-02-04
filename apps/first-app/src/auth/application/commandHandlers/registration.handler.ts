@@ -61,7 +61,7 @@ export class RegistrationHandler
             emailConfirmCode,
           });
 
-          this.nodemailerService.sendRegistrationConfirmMessage({
+          await this.nodemailerService.sendRegistrationConfirmMessage({
             email,
             confirmCode: emailConfirmCode,
           });
@@ -110,7 +110,7 @@ export class RegistrationHandler
       },
     });
 
-    this.nodemailerService.sendRegistrationConfirmMessage({
+    await this.nodemailerService.sendRegistrationConfirmMessage({
       email: createdUser.email,
       confirmCode: createdUser.userEmailInfo.emailConfirmCode,
     });
