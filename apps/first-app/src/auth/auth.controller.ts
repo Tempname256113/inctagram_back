@@ -28,7 +28,7 @@ import {
   UpdateTokensPairRouteSwaggerDescription,
   ResendRegisterEmailRouteSwaggerDescription,
   PasswordRecoveryRouteSwaggerDescription,
-} from '@swagger/auth';
+} from './swagger/exports';
 import {
   CheckRegisterCodeCommand,
   GithubAuthCommand,
@@ -41,7 +41,7 @@ import {
   RegistrationCommand,
   ResendRegisterEmailCommand,
   UpdateTokensPairCommand,
-} from '@commands/auth';
+} from './application/commandHandlers/exports';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
 import {
@@ -49,14 +49,13 @@ import {
   RegisterDTO,
   ResendRegisterEmailDto,
 } from './dto/register.dto';
-import { refreshTokenCookieTitle } from './variables/refreshToken.config';
+import { refreshTokenCookieTitle } from './variables/refreshTokenTitle';
 
-// надо чтобы задеплоить
 @Controller('auth')
 @ApiTags('auth controllers')
 export class AuthController {
   constructor(private readonly commandBus: CommandBus) {}
-
+  // deploy
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @RegisterRouteSwaggerDescription()
@@ -125,12 +124,13 @@ export class AuthController {
   @LogoutRouteSwaggerDescription()
   async logout(
     @Cookies(refreshTokenCookieTitle) refreshToken: string,
+    @Response({ passthrough: true }) res: Res,
   ): Promise<void> {
     if (!refreshToken) {
       throw new UnauthorizedException('Provide refresh token for logout');
     }
 
-    await this.commandBus.execute(new LogoutCommand(refreshToken));
+    await this.commandBus.execute(new LogoutCommand({ refreshToken, res }));
   }
 
   @Post('password-recovery-request')
@@ -173,11 +173,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @SideAuthRouteSwaggerDescription()
   async authViaGoogle(
+    @Cookies(refreshTokenCookieTitle) refreshToken: string | undefined,
     @Body() googleAuthCode: SideAuthDto,
     @Response({ passthrough: true }) res: Res,
   ): Promise<SideAuthResponseType> {
     return this.commandBus.execute(
-      new GoogleAuthCommand({ googleCode: googleAuthCode.code, res }),
+      new GoogleAuthCommand({
+        googleCode: googleAuthCode.code,
+        res,
+        refreshToken,
+      }),
     );
   }
 
@@ -185,11 +190,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @SideAuthRouteSwaggerDescription()
   async authViaGithub(
+    @Cookies(refreshTokenCookieTitle) refreshToken: string | undefined,
     @Body() githubAuthCode: SideAuthDto,
     @Response({ passthrough: true }) res: Res,
   ): Promise<SideAuthResponseType> {
     return this.commandBus.execute(
-      new GithubAuthCommand({ githubCode: githubAuthCode.code, res }),
+      new GithubAuthCommand({
+        githubCode: githubAuthCode.code,
+        res,
+        refreshToken,
+      }),
     );
   }
 }

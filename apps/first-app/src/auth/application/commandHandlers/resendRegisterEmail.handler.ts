@@ -45,7 +45,7 @@ export class ResendRegisterEmailHandler
       emailConfirmCode: confirmEmailCode,
     });
 
-    this.nodemailerService.sendRegistrationConfirmMessage({
+    await this.nodemailerService.sendRegistrationConfirmMessage({
       email: foundUser.email,
       confirmCode: confirmEmailCode,
     });

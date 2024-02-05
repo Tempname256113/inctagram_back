@@ -4,7 +4,6 @@ import { RefreshTokenPayloadType } from '../../types/tokens.models';
 import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { TokensService } from '../../utils/tokens.service';
 import { UserRepository } from '../../repositories/user.repository';
-import { getRefreshTokenCookieConfig } from '../../variables/refreshToken.config';
 
 export class UpdateTokensPairCommand {
   constructor(public readonly data: { refreshToken: string; res: Response }) {}
@@ -46,7 +45,6 @@ export class UpdateTokensPairHandler
     const updatedSessionsAmount = await this.userRepository.updateSession({
       userId: newRefreshTokenPayload.userId,
       currentRefreshTokenUuid: refreshTokenPayload.uuid,
-      newRefreshTokenUuid: newRefreshTokenPayload.uuid,
       refreshTokenExpiresAt: newRefreshTokenExpiresAtDate,
     });
 
@@ -55,15 +53,7 @@ export class UpdateTokensPairHandler
       throw new UnauthorizedException('Refresh token is invalid');
     }
 
-    const refreshTokenCookieConfig = getRefreshTokenCookieConfig(
-      newRefreshTokenExpiresAtDate,
-    );
-
-    res.cookie(
-      refreshTokenCookieConfig.cookieTitle,
-      refreshToken,
-      refreshTokenCookieConfig.cookieOptions,
-    );
+    await this.tokensService.setRefreshTokenInCookie({ refreshToken, res });
 
     const newAccessToken = newTokensPair.accessToken;
 

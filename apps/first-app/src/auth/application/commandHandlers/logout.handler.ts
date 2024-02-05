@@ -3,9 +3,10 @@ import { RefreshTokenPayloadType } from '../../types/tokens.models';
 import { UnauthorizedException } from '@nestjs/common';
 import { TokensService } from '../../utils/tokens.service';
 import { UserRepository } from '../../repositories/user.repository';
+import { Response } from 'express';
 
 export class LogoutCommand {
-  constructor(public readonly refreshToken: string) {}
+  constructor(public readonly data: { refreshToken: string; res: Response }) {}
 }
 
 @CommandHandler(LogoutCommand)
@@ -15,7 +16,9 @@ export class LogoutHandler implements ICommandHandler<LogoutCommand, void> {
     private readonly userRepository: UserRepository,
   ) {}
   async execute(command: LogoutCommand): Promise<void> {
-    const refreshToken: string = command.refreshToken;
+    const {
+      data: { refreshToken, res },
+    } = command;
 
     const refreshTokenPayload: RefreshTokenPayloadType | null =
       await this.tokensService.verifyRefreshToken(refreshToken);
@@ -28,5 +31,7 @@ export class LogoutHandler implements ICommandHandler<LogoutCommand, void> {
       userId: refreshTokenPayload.userId,
       refreshTokenUuid: refreshTokenPayload.uuid,
     });
+
+    this.tokensService.removeRefreshTokenInCookie(res);
   }
 }
