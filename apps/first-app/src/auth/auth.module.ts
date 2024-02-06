@@ -19,6 +19,7 @@ import { CheckRegisterCodeHandler } from './application/checkRegisterCode.handle
 import { RecaptchaService } from './utils/recaptcha.service';
 import { ResendRegisterEmailHandler } from './application/commandHandlers/resendRegisterEmail.handler';
 import { PrismaService } from '../../../../shared/database/prisma.service';
+import { PasswordRecoveryHandler } from './application/commandHandlers/passwordRecovery/passwordRecovery.handler';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -31,6 +32,7 @@ const commandHandlers = [
   GoogleAuthHandler,
   UpdateTokensPairHandler,
   CheckRegisterCodeHandler,
+  PasswordRecoveryHandler,
 ];
 
 const repos = [UserRepository];
