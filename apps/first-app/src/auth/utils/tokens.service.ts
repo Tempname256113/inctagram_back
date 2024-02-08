@@ -1,5 +1,5 @@
 import { ConfigService, ConfigType } from '@nestjs/config';
-import appConfig from '@shared/config/app.config.service';
+import appConfig from '../../../../../shared/config/app.config.service';
 import {
   BadRequestException,
   Inject,
@@ -13,14 +13,16 @@ import {
   RefreshTokenPayloadType,
 } from '../types/tokens.models';
 import * as crypto from 'crypto';
+import { Response } from 'express';
+import { refreshTokenCookieTitle } from '../variables/refreshTokenTitle';
 
 @Injectable()
 export class TokensService {
   private readonly accessTokenSecret: string;
   private readonly refreshTokenSecret: string;
 
-  private readonly getAccessTokenExpiredTime: (currentDate: Date) => number;
-  private readonly getRefreshTokenExpiredTime: (currentDate: Date) => number;
+  readonly getAccessTokenExpiredTime: (currentDate: Date) => number;
+  readonly getRefreshTokenExpiredTime: (currentDate: Date) => number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -70,6 +72,30 @@ export class TokensService {
 
     return this.jwtService.signAsync(payload, {
       secret: this.refreshTokenSecret,
+    });
+  }
+
+  setRefreshTokenInCookie(data: { refreshToken: string; res: Response }): void {
+    const { refreshToken, res } = data;
+
+    // так как в JWT токене время в секундах, то его надо перевести в миллисекунды
+    const expiresDate: Date = new Date(
+      this.getTokenPayload(refreshToken).exp * 1000,
+    );
+
+    res.cookie(refreshTokenCookieTitle, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      expires: expiresDate,
+      sameSite: 'none',
+    });
+  }
+
+  removeRefreshTokenInCookie(res: Response) {
+    res.cookie(refreshTokenCookieTitle, null, {
+      sameSite: 'none',
+      secure: true,
+      httpOnly: true,
     });
   }
 

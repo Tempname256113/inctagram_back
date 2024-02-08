@@ -6,7 +6,7 @@ import {
   UserEmailInfo,
   UserSession,
 } from '@prisma/client';
-import { PrismaService } from '@shared/database/prisma.service';
+import { PrismaService } from '../../../../../shared/database/prisma.service';
 
 @Injectable()
 export class UserRepository {
@@ -148,7 +148,6 @@ export class UserRepository {
   async updateSession(data: {
     userId: number;
     currentRefreshTokenUuid: string;
-    newRefreshTokenUuid: string;
     refreshTokenExpiresAt: Date;
   }) {
     return this.prisma.userSession.updateMany({
@@ -157,7 +156,6 @@ export class UserRepository {
         refreshTokenUuid: data.currentRefreshTokenUuid,
       },
       data: {
-        refreshTokenUuid: data.newRefreshTokenUuid,
         expiresAt: data.refreshTokenExpiresAt,
       },
     });

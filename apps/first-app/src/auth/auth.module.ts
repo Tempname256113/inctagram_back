@@ -10,7 +10,6 @@ import { LoginHandler } from './application/commandHandlers/login.handler';
 import { PasswordRecoveryCodeCheckHandler } from './application/commandHandlers/passwordRecovery/passwordRecoveryCodeCheck.handler';
 import { UserRepository } from './repositories/user.repository';
 import { UserQueryRepository } from './repositories/query/user.queryRepository';
-import { PrismaService } from '@shared/database/prisma.service';
 import { PasswordRecoveryRequestHandler } from './application/commandHandlers/passwordRecovery/passwordRecoveryRequest.handler';
 import { GithubAuthHandler } from './application/commandHandlers/githubAuth.handler';
 import { GoogleAuthHandler } from './application/commandHandlers/googleAuth.handler';
@@ -19,6 +18,8 @@ import { UpdateTokensPairHandler } from './application/commandHandlers/updateTok
 import { CheckRegisterCodeHandler } from './application/checkRegisterCode.handler';
 import { RecaptchaService } from './utils/recaptcha.service';
 import { ResendRegisterEmailHandler } from './application/commandHandlers/resendRegisterEmail.handler';
+import { PrismaService } from '../../../../shared/database/prisma.service';
+import { PasswordRecoveryHandler } from './application/commandHandlers/passwordRecovery/passwordRecovery.handler';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -31,6 +32,7 @@ const commandHandlers = [
   GoogleAuthHandler,
   UpdateTokensPairHandler,
   CheckRegisterCodeHandler,
+  PasswordRecoveryHandler,
 ];
 
 const repos = [UserRepository];

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { createTransport, Transporter } from 'nodemailer';
 import { ConfigType } from '@nestjs/config';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import appConfig from '@shared/config/app.config.service';
+import appConfig from '../../../../../shared/config/app.config.service';
 
 @Injectable()
 export class NodemailerService {
@@ -18,10 +18,9 @@ export class NodemailerService {
     this.frontendUrl = this.config.FRONTEND_URL;
 
     this.transporter = createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      host: 'smtp.mail.ru',
+      port: 465,
+      secure: true,
       auth: {
         user: this.config.EMAIL_USER,
         pass: this.config.EMAIL_PASS,
@@ -32,11 +31,11 @@ export class NodemailerService {
   async sendRegistrationConfirmMessage(data: {
     email: string;
     confirmCode: string;
-  }): Promise<void> {
+  }) {
     const { email, confirmCode } = data;
 
     try {
-      await this.transporter.sendMail({
+      return this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Confirm your registration please',
@@ -55,7 +54,7 @@ export class NodemailerService {
     userPasswordRecoveryCode: string;
   }) {
     try {
-      await this.transporter.sendMail({
+      return this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Password recovery',
@@ -66,9 +65,9 @@ export class NodemailerService {
     }
   }
 
-  async sendRegistrationSuccessfulMessage(email: string): Promise<void> {
+  async sendRegistrationSuccessfulMessage(email: string) {
     try {
-      await this.transporter.sendMail({
+      return this.transporter.sendMail({
         from: this.nodemailerEmailUser,
         to: email,
         subject: 'Successful registration',

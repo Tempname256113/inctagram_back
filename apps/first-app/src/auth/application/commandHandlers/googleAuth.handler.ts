@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
 import { Inject, UnauthorizedException } from '@nestjs/common';
-import authConfig from '@shared/config/auth.config.service';
+import authConfig from '../../../../../../shared/config/auth.config.service';
 import { ConfigType } from '@nestjs/config';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 import { UserRepository } from '../../repositories/user.repository';
@@ -13,7 +13,13 @@ import { Providers } from '@prisma/client';
 import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
 
 export class GoogleAuthCommand {
-  constructor(public readonly data: { googleCode: string; res: Res }) {}
+  constructor(
+    public readonly data: {
+      googleCode: string;
+      res: Res;
+      refreshToken: string | undefined;
+    },
+  ) {}
 }
 
 @CommandHandler(GoogleAuthCommand)
@@ -39,7 +45,7 @@ export class GoogleAuthHandler
 
   async execute(command: GoogleAuthCommand): Promise<SideAuthResponseType> {
     const {
-      data: { googleCode, res },
+      data: { googleCode, res, refreshToken },
     } = command;
 
     const userInfoFromGoogle = await this.getUserInfoFromGoogle(googleCode);
@@ -50,7 +56,15 @@ export class GoogleAuthHandler
       provider: Providers.Google,
     });
 
-    await this.createUserSession(userFromDB.id, res);
+    // если использует клиент роут для логина через сторонние апи
+    // надо проверить есть у него уже рефреш токен или нет
+    // если есть то не надо создавать новую сессию чтобы засорять базу
+    // надо обновить существующую сессию
+    if (refreshToken) {
+      await this.updateUserSession({ refreshToken, res });
+    } else {
+      await this.createUserSession({ userId: userFromDB.id, res });
+    }
 
     return {
       userId: userFromDB.id,
