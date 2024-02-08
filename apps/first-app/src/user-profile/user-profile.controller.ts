@@ -6,23 +6,20 @@ import { User } from 'shared/decorators/user.decorator';
 import { UserDecorator } from 'shared/types/user/user.type';
 import { CommandBus } from '@nestjs/cqrs';
 import { CreateUserProfileCommand } from './application/commandHandlers/userProfile/createUserProfile.handler';
-import { GetUserProfileCommand } from './application/commandHandlers/userProfile/getUserProfile.handler';
 import { UpdateUserProfileCommand } from './application/commandHandlers/userProfile/updateUserProfile.handler';
+import { UserProfileQueryRepository } from './repositories/query/user-profile-query.repository';
 
 @Controller('user-profile')
 export class UserProfileController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly userProfileQueryRepository: UserProfileQueryRepository,
+  ) {}
 
   @UseGuards(AuthGuard)
   @Get()
   async findOne(@User() user: UserDecorator) {
-    const userProfile = await this.commandBus.execute(
-      new GetUserProfileCommand({
-        userId: user.userId,
-      }),
-    );
-
-    return userProfile;
+    return this.userProfileQueryRepository.getProfile(user.userId);
   }
 
   @UseGuards(AuthGuard)

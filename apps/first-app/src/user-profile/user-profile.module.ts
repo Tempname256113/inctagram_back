@@ -8,14 +8,9 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { CreateUserProfileHandler } from './application/commandHandlers/userProfile/createUserProfile.handler';
 import { PrismaService } from '@shared/database/prisma.service';
 import { UserQueryRepository } from '../auth/repositories/query/user.queryRepository';
-import { GetUserProfileHandler } from './application/commandHandlers/userProfile/getUserProfile.handler';
 import { UpdateUserProfileHandler } from './application/commandHandlers/userProfile/updateUserProfile.handler';
 
-const commandHandlers = [
-  GetUserProfileHandler,
-  CreateUserProfileHandler,
-  UpdateUserProfileHandler,
-];
+const commandHandlers = [CreateUserProfileHandler, UpdateUserProfileHandler];
 
 const repos = [UserProfileRepository];
 
