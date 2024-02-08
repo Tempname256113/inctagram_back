@@ -10,7 +10,7 @@ export const UpdateUserProfileSwagger = () => {
     ApiResponse({
       status: HttpStatus.OK,
       description: `User profile update successfully`,
-      type: [UserProfileSwaggerType],
+      type: UserProfileSwaggerType,
     }),
     ApiResponse({
       description: 'Something went wrong',
