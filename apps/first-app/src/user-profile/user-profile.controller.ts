@@ -8,6 +8,9 @@ import { CommandBus } from '@nestjs/cqrs';
 import { CreateUserProfileCommand } from './application/commandHandlers/userProfile/createUserProfile.handler';
 import { UpdateUserProfileCommand } from './application/commandHandlers/userProfile/updateUserProfile.handler';
 import { UserProfileQueryRepository } from './repositories/query/user-profile-query.repository';
+import { CreateUserProfileSwagger } from './swagger/userProfile/createUserProfile.swagger';
+import { UpdateUserProfileSwagger } from './swagger/userProfile/updateUserProfile.swagger';
+import { GetUserProfileSwagger } from './swagger/userProfile/getUserProfile.swagger';
 
 @Controller('user-profile')
 export class UserProfileController {
@@ -16,12 +19,14 @@ export class UserProfileController {
     private readonly userProfileQueryRepository: UserProfileQueryRepository,
   ) {}
 
+  @GetUserProfileSwagger()
   @UseGuards(AuthGuard)
   @Get()
   async findOne(@User() user: UserDecorator) {
     return this.userProfileQueryRepository.getProfile(user.userId);
   }
 
+  @CreateUserProfileSwagger()
   @UseGuards(AuthGuard)
   @Post()
   async create(
@@ -38,6 +43,7 @@ export class UserProfileController {
     return userProfile;
   }
 
+  @UpdateUserProfileSwagger()
   @UseGuards(AuthGuard)
   @Patch()
   async update(
