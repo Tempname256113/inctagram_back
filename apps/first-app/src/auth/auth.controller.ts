@@ -55,7 +55,7 @@ import { refreshTokenCookieTitle } from './variables/refreshTokenTitle';
 @ApiTags('auth controllers')
 export class AuthController {
   constructor(private readonly commandBus: CommandBus) {}
-  //
+  //deploy
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @RegisterRouteSwaggerDescription()
