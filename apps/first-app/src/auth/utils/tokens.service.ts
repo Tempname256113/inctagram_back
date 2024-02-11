@@ -1,6 +1,11 @@
 import { ConfigService, ConfigType } from '@nestjs/config';
 import appConfig from '../../../../../shared/config/app.config.service';
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { add, getUnixTime } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -131,5 +136,29 @@ export class TokensService {
     } catch (err) {
       return null;
     }
+  }
+
+  async verifyAccessToken(
+    accessToken: string,
+  ): Promise<RefreshTokenPayloadType> {
+    if (!accessToken) {
+      throw new UnauthorizedException();
+    }
+
+    const [bearer, tokenWithoutBearer] = accessToken.split(' ');
+
+    if (bearer !== 'Bearer') {
+      throw new UnauthorizedException();
+    }
+
+    const accessTokenPayload = await this.jwtService
+      .verifyAsync(tokenWithoutBearer, {
+        secret: this.accessTokenSecret,
+      })
+      .catch(() => {
+        throw new BadRequestException('Invalid token error');
+      });
+
+    return accessTokenPayload;
   }
 }

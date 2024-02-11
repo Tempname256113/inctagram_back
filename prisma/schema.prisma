@@ -35,11 +35,12 @@ model User {
   password String?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   userEmailInfo              UserEmailInfo?
   userChangePasswordRequests UserChangePasswordRequest[]
   userSessions               UserSession[]
+  UserProfile                UserProfile?
 
   @@map("users")
 }
@@ -50,7 +51,7 @@ model UserSession {
   expiresAt        DateTime
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 
@@ -72,7 +73,7 @@ model UserEmailInfo {
   provider         Providers?
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 
@@ -92,12 +93,30 @@ model UserChangePasswordRequest {
   expiresAt            DateTime?
 
   createdAt DateTime? @default(now())
-  updatedAt DateTime? @updatedAt @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
   deletedAt DateTime?
 
   user User @relation(fields: [userId], references: [id])
 
   @@map("user_change_password_requests")
+}
+
+model UserProfile {
+  userId      Int       @id @unique
+  username    String    @unique @db.Citext
+  firstName   String    @db.VarChar(255)
+  lastName    String    @db.VarChar(255)
+  dateOfBirth DateTime? @db.Date()
+  country     String?   @db.VarChar(255)
+  city        String?   @db.VarChar(255)
+  aboutMe     String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  deletedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_profiles")
 }
 
 model playing_with_neon {
