@@ -88,7 +88,7 @@ export class GoogleAuthHandler
       id_token: string;
     } = await axios({
       method: 'post',
-      url: `https://oauth2.googleapis.com/token?grant_type=authorization_code&code=${googleCode}&redirect_uri=${frontendUrl}&client_id=${clientId}&client_secret=${clientSecret}`,
+      url: `https://oauth2.googleapis.com/token?grant_type=authorization_code&code=${googleCode}&redirect_uri=${frontendUrl}/auth/sign-in&client_id=${clientId}&client_secret=${clientSecret}`,
       headers: { Accept: 'application/json' },
     })
       .then((res) => res.data)
