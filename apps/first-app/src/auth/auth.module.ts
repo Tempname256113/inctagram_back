@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { AuthController } from './auth.controller';
+import { AuthController } from './controllers/auth.controller';
 import { RegistrationHandler } from './application/commandHandlers/registration.handler';
 import { NodemailerService } from './utils/nodemailer.service';
 import { BcryptService } from './utils/bcrypt.service';
@@ -20,6 +20,9 @@ import { RecaptchaService } from './utils/recaptcha.service';
 import { ResendRegisterEmailHandler } from './application/commandHandlers/resendRegisterEmail.handler';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 import { PasswordRecoveryHandler } from './application/commandHandlers/passwordRecovery/passwordRecovery.handler';
+import { RegisterController } from './controllers/register.controller';
+import { PasswordRecoveryController } from './controllers/passwordRecovery.controller';
+import { SideAuthController } from './controllers/sideAuth.controller';
 
 const commandHandlers = [
   RegistrationHandler,
@@ -41,7 +44,12 @@ const queryRepos = [UserQueryRepository];
 
 @Module({
   imports: [CqrsModule, JwtModule],
-  controllers: [AuthController],
+  controllers: [
+    AuthController,
+    RegisterController,
+    PasswordRecoveryController,
+    SideAuthController,
+  ],
   providers: [
     ...commandHandlers,
     ...repos,
