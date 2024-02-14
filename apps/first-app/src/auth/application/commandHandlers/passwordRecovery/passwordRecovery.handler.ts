@@ -1,65 +1,50 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { BadRequestException } from '@nestjs/common';
-import { UserChangePasswordRequestStates } from '@prisma/client';
-import { UserPasswordRecoveryDTO } from '../../../dto/password-recovery.dto';
-import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
-import {
-  AUTH_ERRORS,
-  CHANGE_PASSWORD_REQUEST_ERRORS,
-} from '../../../variables/validationErrors.messages';
+import { PasswordRecoveryCodeCheckFunction } from '../common/passwordRecoveryCodeCheckFunction';
 import { UserRepository } from '../../../repositories/user.repository';
+import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
 import { BcryptService } from '../../../utils/bcrypt.service';
 
 export class PasswordRecoveryCommand {
-  constructor(public readonly passwordRecoveryDTO: UserPasswordRecoveryDTO) {}
+  constructor(
+    public readonly data: {
+      newPassword: string;
+      passwordRecoveryCode: string;
+    },
+  ) {}
 }
 
 @CommandHandler(PasswordRecoveryCommand)
 export class PasswordRecoveryHandler
+  extends PasswordRecoveryCodeCheckFunction
   implements ICommandHandler<PasswordRecoveryCommand, void>
 {
   constructor(
-    private readonly userQueryRepository: UserQueryRepository,
     private readonly userRepository: UserRepository,
+    private readonly userQueryRepository: UserQueryRepository,
     private readonly bcryptService: BcryptService,
-  ) {}
+  ) {
+    super({ userQueryRepository, userRepository });
+  }
 
-  async execute({
-    passwordRecoveryDTO,
-  }: PasswordRecoveryCommand): Promise<void> {
+  async execute(command: PasswordRecoveryCommand): Promise<void> {
+    const {
+      data: { newPassword, passwordRecoveryCode },
+    } = command;
+
     const foundChangePasswordRequest =
-      await this.userQueryRepository.getUserChangePasswordRequestByCode({
-        recoveryCode: passwordRecoveryDTO.passwordRecoveryCode,
-        state: UserChangePasswordRequestStates.pending,
-        deleted: false,
-      });
+      await this.checkPasswordRecoveryCode(passwordRecoveryCode);
 
-    if (!foundChangePasswordRequest) {
-      throw new BadRequestException(CHANGE_PASSWORD_REQUEST_ERRORS.NOT_FOUND);
-    }
+    const passwordHash: string =
+      await this.bcryptService.encryptPassword(newPassword);
 
-    if (
-      new Date().getTime() >= foundChangePasswordRequest.expiresAt.getTime()
-    ) {
-      await this.userRepository.softDeleteUserChangePasswordRequest(
-        foundChangePasswordRequest.id,
-      );
-
-      throw new BadRequestException(AUTH_ERRORS.PASSWORD_TOKEN_EXPIRED);
-    }
-
-    await this.userRepository.softDeleteUserChangePasswordRequest(
-      foundChangePasswordRequest.id,
+    await this.userRepository.softDeleteChangePasswordRequestAndChangePasswordTransaction(
+      {
+        changePasswordRequestId: foundChangePasswordRequest.id,
+        changePasswordData: {
+          userId: foundChangePasswordRequest.userId,
+          password: passwordHash,
+        },
+      },
     );
-
-    const passwordHash: string = await this.bcryptService.encryptPassword(
-      passwordRecoveryDTO.password,
-    );
-
-    await this.userRepository.changeUserPassword({
-      userId: foundChangePasswordRequest.userId,
-      password: passwordHash,
-    });
-    // TODO: add transactions, drop all sessions users, think about softDelete
   }
 }

@@ -1,6 +1,6 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { refreshTokenCookieProp } from './auth/variables/refreshToken.variable';
 import { INestApplication } from '@nestjs/common';
+import { refreshTokenCookieTitle } from './auth/variables/refreshTokenTitle';
 
 export class SwaggerConfig {
   constructor(private readonly app: INestApplication) {}
@@ -17,7 +17,7 @@ export class SwaggerConfig {
       })
       .addSecurity('cookie', {
         type: 'apiKey',
-        name: refreshTokenCookieProp,
+        name: refreshTokenCookieTitle,
         in: 'cookie',
         description:
           'To access this route, you need to provide refresh token in the cookies',

@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@shared/database/prisma.service';
-import {
-  UserChangePasswordRequest,
-  UserChangePasswordRequestStates,
-} from '@prisma/client';
+import { UserChangePasswordRequestStates } from '@prisma/client';
+import { PrismaService } from '../../../../../../shared/database/prisma.service';
 
 @Injectable()
 export class UserQueryRepository {
@@ -16,11 +13,18 @@ export class UserQueryRepository {
     });
   }
 
-  async getUserChangePasswordRequestByCode(data: {
+  async getUserById(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { userEmailInfo: true },
+    });
+  }
+
+  async getPasswordRecoveryRequestByCode(data: {
     recoveryCode: string;
     state: UserChangePasswordRequestStates;
     deleted?: boolean;
-  }): Promise<UserChangePasswordRequest | null> {
+  }) {
     const { recoveryCode, state, deleted = false } = data;
 
     return this.prisma.userChangePasswordRequest.findFirst({
@@ -29,6 +33,30 @@ export class UserQueryRepository {
         state,
         deletedAt: deleted ? { not: null } : null,
       },
+      include: { user: true },
+    });
+  }
+
+  async getPasswordRecoveryRequestByUserEmail(data: {
+    email: string;
+    state: UserChangePasswordRequestStates;
+    deleted?: boolean;
+  }) {
+    const { email, state, deleted } = data;
+
+    return this.prisma.userChangePasswordRequest.findFirst({
+      where: {
+        state,
+        deletedAt: deleted ? { not: null } : null,
+        user: { email },
+      },
+    });
+  }
+
+  async getUserByConfirmEmailCode(confirmEmailCode: string) {
+    return this.prisma.user.findFirst({
+      where: { userEmailInfo: { emailConfirmCode: confirmEmailCode } },
+      include: { userEmailInfo: true },
     });
   }
 

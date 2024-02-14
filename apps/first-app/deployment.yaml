@@ -52,11 +52,6 @@ spec:
                  secretKeyRef:
                    name: deepwaterhorizon-back-production-config-secret
                    key: GOOGLE_CLIENT_SECRET
-             - name: GOOGLE_REDIRECT_URL
-               valueFrom:
-                 secretKeyRef:
-                   name: deepwaterhorizon-back-production-config-secret
-                   key: GOOGLE_REDIRECT_URL
              - name: GITHUB_CLIENT_ID
                valueFrom:
                  secretKeyRef:
@@ -67,11 +62,16 @@ spec:
                  secretKeyRef:
                    name: deepwaterhorizon-back-production-config-secret
                    key: GITHUB_CLIENT_SECRET
-             - name: GITHUB_REDIRECT_URL
+             - name: RECAPTCHA_SECRET_KEY
                valueFrom:
                  secretKeyRef:
                    name: deepwaterhorizon-back-production-config-secret
-                   key: GITHUB_REDIRECT_URL
+                   key: RECAPTCHA_SECRET_KEY
+             - name: FRONTEND_URL
+               valueFrom:
+                 secretKeyRef:
+                   name: deepwaterhorizon-back-production-config-secret
+                   key: FRONTEND_URL
              - name: DATABASE_URL
                valueFrom:
                  secretKeyRef:

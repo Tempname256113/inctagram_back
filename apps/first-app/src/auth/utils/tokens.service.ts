@@ -1,6 +1,11 @@
 import { ConfigService, ConfigType } from '@nestjs/config';
-import appConfig from '@shared/config/app.config.service';
-import { Inject, Injectable } from '@nestjs/common';
+import appConfig from '../../../../../shared/config/app.config.service';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { add, getUnixTime } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -8,14 +13,16 @@ import {
   RefreshTokenPayloadType,
 } from '../types/tokens.models';
 import * as crypto from 'crypto';
+import { Response } from 'express';
+import { refreshTokenCookieTitle } from '../variables/refreshTokenTitle';
 
 @Injectable()
 export class TokensService {
   private readonly accessTokenSecret: string;
   private readonly refreshTokenSecret: string;
 
-  private readonly getAccessTokenExpiredTime: (currentDate: Date) => number;
-  private readonly getRefreshTokenExpiredTime: (currentDate: Date) => number;
+  readonly getAccessTokenExpiredTime: (currentDate: Date) => number;
+  readonly getRefreshTokenExpiredTime: (currentDate: Date) => number;
 
   constructor(
     private readonly configService: ConfigService,
@@ -68,6 +75,30 @@ export class TokensService {
     });
   }
 
+  setRefreshTokenInCookie(data: { refreshToken: string; res: Response }): void {
+    const { refreshToken, res } = data;
+
+    // так как в JWT токене время в секундах, то его надо перевести в миллисекунды
+    const expiresDate: Date = new Date(
+      this.getTokenPayload(refreshToken).exp * 1000,
+    );
+
+    res.cookie(refreshTokenCookieTitle, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      expires: expiresDate,
+      sameSite: 'none',
+    });
+  }
+
+  removeRefreshTokenInCookie(res: Response) {
+    res.cookie(refreshTokenCookieTitle, null, {
+      sameSite: 'none',
+      secure: true,
+      httpOnly: true,
+    });
+  }
+
   async createTokensPair(data: {
     userId: number;
     uuid?: string;
@@ -105,5 +136,29 @@ export class TokensService {
     } catch (err) {
       return null;
     }
+  }
+
+  async verifyAccessToken(
+    accessToken: string,
+  ): Promise<RefreshTokenPayloadType> {
+    if (!accessToken) {
+      throw new UnauthorizedException();
+    }
+
+    const [bearer, tokenWithoutBearer] = accessToken.split(' ');
+
+    if (bearer !== 'Bearer') {
+      throw new UnauthorizedException();
+    }
+
+    const accessTokenPayload = await this.jwtService
+      .verifyAsync(tokenWithoutBearer, {
+        secret: this.accessTokenSecret,
+      })
+      .catch(() => {
+        throw new BadRequestException('Invalid token error');
+      });
+
+    return accessTokenPayload;
   }
 }

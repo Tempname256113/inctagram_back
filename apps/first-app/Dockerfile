@@ -27,6 +27,10 @@ RUN yarn install
 # Bundle app source code
 COPY --chown=node . .
 
+# надо придумать как применять миграции автоматически, а не самому каждый раз
+# этот способ не работает потому что нужно в окружении иметь переменную DATABASE_URL
+# а в открытом виде в этом докерфайле я не могу ее оставлять
+# RUN yarn prisma migrate deploy
 RUN yarn build:${SERVICE}
 
 # Bind to all network interfaces so that it can be mapped to the host OS

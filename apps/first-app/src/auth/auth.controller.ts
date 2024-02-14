@@ -7,13 +7,13 @@ import {
   Response,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
+import { LoginDTO } from './dto/login.dto';
 import { CommandBus } from '@nestjs/cqrs';
-import { refreshTokenCookieProp } from './variables/refreshToken.variable';
 import {
-  UserPasswordRecoveryDTO,
-  UserPasswordRecoveryRequestDTO,
-} from './dto/password-recovery.dto';
+  PasswordRecoveryCodeCheckDTO,
+  PasswordRecoveryDto,
+  PasswordRecoveryRequestDTO,
+} from './dto/passwordRecovery.dto';
 import { Cookies } from './decorators/cookies.decorator';
 import { Response as Res } from 'express';
 import { ApiTags } from '@nestjs/swagger';
@@ -21,33 +21,45 @@ import {
   LoginRouteSwaggerDescription,
   LogoutRouteSwaggerDescription,
   PasswordRecoveryRequestRouteSwaggerDescription,
-  PasswordRecoveryRouteSwaggerDescription,
+  PasswordRecoveryCodeCheckRouteSwaggerDescription,
+  RegisterCodeCheckRouteSwaggerDescription,
   RegisterRouteSwaggerDescription,
   SideAuthRouteSwaggerDescription,
   UpdateTokensPairRouteSwaggerDescription,
-} from '@swagger/auth';
+  ResendRegisterEmailRouteSwaggerDescription,
+  PasswordRecoveryRouteSwaggerDescription,
+} from './swagger/exports';
 import {
+  CheckRegisterCodeCommand,
   GithubAuthCommand,
   GoogleAuthCommand,
   LoginCommand,
   LogoutCommand,
+  PasswordRecoveryCodeCheckCommand,
   PasswordRecoveryCommand,
   PasswordRecoveryRequestCommand,
   RegistrationCommand,
+  ResendRegisterEmailCommand,
   UpdateTokensPairCommand,
-} from '@commands/auth';
+} from './application/commandHandlers/exports';
 import { SideAuthResponseType } from './dto/response/sideAuth.responseType';
 import { SideAuthDto } from './dto/sideAuth.dto';
+import {
+  RegisterCodeCheckDto,
+  RegisterDTO,
+  ResendRegisterEmailDto,
+} from './dto/register.dto';
+import { refreshTokenCookieTitle } from './variables/refreshTokenTitle';
 
 @Controller('auth')
 @ApiTags('auth controllers')
 export class AuthController {
   constructor(private readonly commandBus: CommandBus) {}
-
+  //deploy12
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @RegisterRouteSwaggerDescription()
-  async register(@Body() userRegistrationDTO: UserRegisterDTO) {
+  async register(@Body() userRegistrationDTO: RegisterDTO): Promise<void> {
     await this.commandBus.execute(
       new RegistrationCommand({
         email: userRegistrationDTO.email,
@@ -55,14 +67,37 @@ export class AuthController {
         username: userRegistrationDTO.username,
       }),
     );
+  }
 
-    return `We have sent a link to confirm your email to ${userRegistrationDTO.email}`;
+  @Post('register-code-check')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @RegisterCodeCheckRouteSwaggerDescription()
+  async checkRegisterCode(
+    @Body() registerCode: RegisterCodeCheckDto,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new CheckRegisterCodeCommand(registerCode.code),
+    );
+  }
+
+  @Post('resend-register-email')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ResendRegisterEmailRouteSwaggerDescription()
+  async sendEmail(
+    @Body() sendEmailInfo: ResendRegisterEmailDto,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new ResendRegisterEmailCommand(sendEmailInfo),
+    );
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @LoginRouteSwaggerDescription()
-  async login(@Body() userLoginDTO: UserLoginDTO, @Response() res: Res) {
+  async login(
+    @Body() userLoginDTO: LoginDTO,
+    @Response() res: Res,
+  ): Promise<void> {
     await this.commandBus.execute(new LoginCommand({ userLoginDTO, res }));
   }
 
@@ -70,9 +105,9 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @UpdateTokensPairRouteSwaggerDescription()
   async updateTokensPair(
-    @Cookies(refreshTokenCookieProp) refreshToken: string,
+    @Cookies(refreshTokenCookieTitle) refreshToken: string,
     @Response() res: Res,
-  ) {
+  ): Promise<void> {
     if (!refreshToken) {
       throw new UnauthorizedException(
         'Provide refresh token in cookies for update tokens pair',
@@ -87,33 +122,50 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @LogoutRouteSwaggerDescription()
-  async logout(@Cookies(refreshTokenCookieProp) refreshToken: string) {
+  async logout(
+    @Cookies(refreshTokenCookieTitle) refreshToken: string,
+    @Response({ passthrough: true }) res: Res,
+  ): Promise<void> {
     if (!refreshToken) {
       throw new UnauthorizedException('Provide refresh token for logout');
     }
 
-    await this.commandBus.execute(new LogoutCommand(refreshToken));
-
-    return 'Logout success';
+    await this.commandBus.execute(new LogoutCommand({ refreshToken, res }));
   }
 
   @Post('password-recovery-request')
   @HttpCode(HttpStatus.OK)
   @PasswordRecoveryRequestRouteSwaggerDescription()
   async passwordRecoveryRequest(
-    @Body() passwordRecoveryRequestDTO: UserPasswordRecoveryRequestDTO,
-  ) {
+    @Body() passwordRecoveryRequestDTO: PasswordRecoveryRequestDTO,
+  ): Promise<void> {
     await this.commandBus.execute(
       new PasswordRecoveryRequestCommand(passwordRecoveryRequestDTO),
     );
   }
 
-  @Post('password-recovery')
-  @HttpCode(HttpStatus.OK)
-  @PasswordRecoveryRouteSwaggerDescription()
-  async passwordRecovery(@Body() passwordRecoveryDTO: UserPasswordRecoveryDTO) {
+  @Post('password-recovery-code-check')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @PasswordRecoveryCodeCheckRouteSwaggerDescription()
+  async passwordRecoveryCodeCheck(
+    @Body() passwordRecoveryCodeCheckDTO: PasswordRecoveryCodeCheckDTO,
+  ): Promise<void> {
     await this.commandBus.execute(
-      new PasswordRecoveryCommand(passwordRecoveryDTO),
+      new PasswordRecoveryCodeCheckCommand(passwordRecoveryCodeCheckDTO),
+    );
+  }
+
+  @Post('password-recovery')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @PasswordRecoveryRouteSwaggerDescription()
+  async passwordRecovery(
+    @Body() passwordRecoveryDTO: PasswordRecoveryDto,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new PasswordRecoveryCommand({
+        newPassword: passwordRecoveryDTO.password,
+        passwordRecoveryCode: passwordRecoveryDTO.passwordRecoveryCode,
+      }),
     );
   }
 
@@ -121,11 +173,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @SideAuthRouteSwaggerDescription()
   async authViaGoogle(
+    @Cookies(refreshTokenCookieTitle) refreshToken: string | undefined,
     @Body() googleAuthCode: SideAuthDto,
     @Response({ passthrough: true }) res: Res,
   ): Promise<SideAuthResponseType> {
     return this.commandBus.execute(
-      new GoogleAuthCommand({ googleCode: googleAuthCode.code, res }),
+      new GoogleAuthCommand({
+        googleCode: googleAuthCode.code,
+        res,
+        refreshToken,
+      }),
     );
   }
 
@@ -133,11 +190,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @SideAuthRouteSwaggerDescription()
   async authViaGithub(
+    @Cookies(refreshTokenCookieTitle) refreshToken: string | undefined,
     @Body() githubAuthCode: SideAuthDto,
     @Response({ passthrough: true }) res: Res,
   ): Promise<SideAuthResponseType> {
     return this.commandBus.execute(
-      new GithubAuthCommand({ githubCode: githubAuthCode.code, res }),
+      new GithubAuthCommand({
+        githubCode: githubAuthCode.code,
+        res,
+        refreshToken,
+      }),
     );
   }
 }
