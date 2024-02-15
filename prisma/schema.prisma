@@ -41,6 +41,7 @@ model User {
   userChangePasswordRequests UserChangePasswordRequest[]
   userSessions               UserSession[]
   UserProfile                UserProfile?
+  FileResource               FileResource[]
 
   @@map("users")
 }
@@ -116,7 +117,52 @@ model UserProfile {
 
   user User @relation(fields: [userId], references: [id])
 
+  profileImage ProfileImage[]
+
   @@map("user_profiles")
+}
+
+enum FileResourceTypes {
+  profilePhoto
+}
+
+model FileResource {
+  id          Int               @id @default(autoincrement())
+  type        FileResourceTypes
+  contentType String            @db.Text
+  size        Int?
+  path        String            @db.Text
+  url         String            @db.Text
+  metadata    Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @default(now()) @updatedAt
+  deletedAt   DateTime?
+  createdById Int
+
+  profileImage ProfileImage[]
+
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@map("file_resources")
+}
+
+enum ProfileImagesKind {
+  avatar
+}
+
+model ProfileImage {
+  id        Int               @id @default(autoincrement())
+  kind      ProfileImagesKind
+  imageId   Int
+  profileId Int
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @default(now()) @updatedAt
+  deletedAt DateTime?
+
+  image   FileResource @relation(fields: [imageId], references: [id])
+  profile UserProfile  @relation(fields: [profileId], references: [userId])
+
+  @@map("profile_images")
 }
 
 model playing_with_neon {
