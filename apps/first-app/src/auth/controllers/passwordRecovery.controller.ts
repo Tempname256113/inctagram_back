@@ -1,16 +1,23 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CommandBus } from '@nestjs/cqrs';
-import { PasswordRecoveryRequestRouteSwaggerDescription } from '../swagger/controllers/auth/passwordRecoveryRequest.route.swagger';
+import { PasswordRecoveryRequestRouteSwaggerDescription } from '../swagger/controllers/passwordRecovery/passwordRecoveryRequest.route.swagger';
 import {
   PasswordRecoveryCodeCheckDTO,
   PasswordRecoveryDto,
   PasswordRecoveryRequestDTO,
 } from '../dto/passwordRecovery.dto';
 import { PasswordRecoveryRequestCommand } from '../application/commandHandlers/passwordRecovery/passwordRecoveryRequest.handler';
-import { PasswordRecoveryCodeCheckRouteSwaggerDescription } from '../swagger/controllers/auth/passwordRecoveryCodeCheck.route.swagger';
+import { PasswordRecoveryCodeCheckRouteSwaggerDescription } from '../swagger/controllers/passwordRecovery/passwordRecoveryCodeCheck.route.swagger';
 import { PasswordRecoveryCodeCheckCommand } from '../application/commandHandlers/passwordRecovery/passwordRecoveryCodeCheck.handler';
-import { PasswordRecoveryRouteSwaggerDescription } from '../swagger/controllers/auth/passwordRecovery.route.swagger';
+import { PasswordRecoveryRouteSwaggerDescription } from '../swagger/controllers/passwordRecovery/passwordRecovery.route.swagger';
 import { PasswordRecoveryCommand } from '../application/commandHandlers/passwordRecovery/passwordRecovery.handler';
 
 @Controller('auth')
@@ -40,7 +47,7 @@ export class PasswordRecoveryController {
     );
   }
 
-  @Post('password-recovery')
+  @Patch('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
   @PasswordRecoveryRouteSwaggerDescription()
   async passwordRecovery(

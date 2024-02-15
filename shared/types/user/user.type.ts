@@ -1,3 +1,3 @@
-export type UserDecorator = {
+export type UserDecoratorType = {
   userId: number;
 };

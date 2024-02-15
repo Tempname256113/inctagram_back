@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpCode,
   HttpStatus,
   Post,
+  Put,
   Response,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -35,7 +37,7 @@ export class AuthController {
     await this.commandBus.execute(new LoginCommand({ userLoginDTO, res }));
   }
 
-  @Post('update-tokens-pair')
+  @Put('update-tokens-pair')
   @HttpCode(HttpStatus.CREATED)
   @UpdateTokensPairRouteSwaggerDescription()
   async updateTokensPair(
@@ -53,7 +55,7 @@ export class AuthController {
     );
   }
 
-  @Post('logout')
+  @Delete('logout')
   @HttpCode(HttpStatus.OK)
   @LogoutRouteSwaggerDescription()
   async logout(

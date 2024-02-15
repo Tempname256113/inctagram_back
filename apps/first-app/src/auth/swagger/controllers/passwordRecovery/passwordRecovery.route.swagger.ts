@@ -1,17 +1,15 @@
 import { applyDecorators } from '@nestjs/common';
 import {
-  ApiBody,
   ApiGoneResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
+  ApiOperation,
 } from '@nestjs/swagger';
-import {
-  PasswordRecoveryCodeCheckResponseTypeSwagger,
-  PasswordRecoveryDtoSwagger,
-} from '../../../dto/passwordRecovery.dto';
+import { PasswordRecoveryCodeCheckResponseTypeSwagger } from '../../../dto/passwordRecovery.dto';
 
 export const PasswordRecoveryRouteSwaggerDescription = () => {
   return applyDecorators(
+    ApiOperation({ summary: 'Password recovery' }),
     ApiNoContentResponse({ description: 'Password was changed' }),
     ApiNotFoundResponse({
       description: 'User with provided password recovery code is not found',
@@ -20,6 +18,5 @@ export const PasswordRecoveryRouteSwaggerDescription = () => {
       description: 'Provided password recovery code is expired',
       type: PasswordRecoveryCodeCheckResponseTypeSwagger,
     }),
-    ApiBody({ type: PasswordRecoveryDtoSwagger }),
   );
 };

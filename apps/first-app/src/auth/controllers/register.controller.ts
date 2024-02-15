@@ -1,16 +1,23 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CommandBus } from '@nestjs/cqrs';
-import { RegisterRouteSwaggerDescription } from '../swagger/controllers/auth/register.route.swagger';
+import { RegisterRouteSwaggerDescription } from '../swagger/controllers/register/register.route.swagger';
 import {
-  RegisterCodeCheckDto,
+  RegisterCodeCheckDTO,
   RegisterDTO,
   ResendRegisterEmailDto,
 } from '../dto/register.dto';
 import { RegistrationCommand } from '../application/commandHandlers/registration.handler';
-import { RegisterCodeCheckRouteSwaggerDescription } from '../swagger/controllers/auth/registerCodeCheck.route.swagger';
+import { RegisterCodeCheckRouteSwaggerDescription } from '../swagger/controllers/register/registerCodeCheck.route.swagger';
 import { CheckRegisterCodeCommand } from '../application/checkRegisterCode.handler';
-import { ResendRegisterEmailRouteSwaggerDescription } from '../swagger/controllers/auth/resendRegisterEmail.route.swagger';
+import { ResendRegisterEmailRouteSwaggerDescription } from '../swagger/controllers/register/resendRegisterEmail.route.swagger';
 import { ResendRegisterEmailCommand } from '../application/commandHandlers/resendRegisterEmail.handler';
 
 @Controller('auth')
@@ -35,14 +42,14 @@ export class RegisterController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @RegisterCodeCheckRouteSwaggerDescription()
   async checkRegisterCode(
-    @Body() registerCode: RegisterCodeCheckDto,
+    @Body() registerCode: RegisterCodeCheckDTO,
   ): Promise<void> {
     await this.commandBus.execute(
       new CheckRegisterCodeCommand(registerCode.code),
     );
   }
 
-  @Post('resend-register-email')
+  @Patch('resend-register-email')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ResendRegisterEmailRouteSwaggerDescription()
   async sendEmail(

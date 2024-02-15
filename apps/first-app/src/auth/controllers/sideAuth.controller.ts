@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CommandBus } from '@nestjs/cqrs';
-import { SideAuthRouteSwaggerDescription } from '../swagger/controllers/auth/sideAuth.route.swagger';
+import { SideAuthRouteSwaggerDescription } from '../swagger/controllers/sideAuth/sideAuth.route.swagger';
 import { Cookies } from '../decorators/cookies.decorator';
 import { refreshTokenCookieTitle } from '../variables/refreshTokenTitle';
 import { SideAuthDto } from '../dto/sideAuth.dto';

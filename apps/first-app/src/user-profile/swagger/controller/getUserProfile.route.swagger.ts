@@ -1,20 +1,23 @@
-import { HttpStatus, applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { UserProfileSwaggerType } from '../type/userProfile.swagger-type';
 
-export const GetUserProfileSwagger = () => {
+export const GetUserProfileRouteSwaggerDescription = () => {
   return applyDecorators(
     ApiOperation({
       summary: `Get user profile`,
     }),
-    ApiResponse({
-      status: HttpStatus.OK,
+    ApiOkResponse({
       description: `User profile found successfully`,
       type: UserProfileSwaggerType,
     }),
-    ApiResponse({
+    ApiBadRequestResponse({
       description: 'Something went wrong',
-      status: HttpStatus.BAD_REQUEST,
       schema: {
         example: {
           message: 'Something went wrong',
@@ -23,5 +26,6 @@ export const GetUserProfileSwagger = () => {
         },
       },
     }),
+    ApiBearerAuth(),
   );
 };
