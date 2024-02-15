@@ -10,7 +10,10 @@ import { NodemailerService } from '../../utils/nodemailer.service';
 import { Response as Res } from 'express';
 import axios from 'axios';
 import { Providers } from '@prisma/client';
-import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
+import {
+  CreateUserType,
+  SideAuthCommonFunctions,
+} from './common/sideAuth.commonFunctions';
 
 export class GoogleAuthCommand {
   constructor(
@@ -39,7 +42,6 @@ export class GoogleAuthHandler
       userQueryRepository,
       userRepository,
       tokensService,
-      nodemailerService,
     });
   }
 
@@ -50,11 +52,28 @@ export class GoogleAuthHandler
 
     const userInfoFromGoogle = await this.getUserInfoFromGoogle(googleCode);
 
-    const userFromDB = await this.getUserFromDB({
+    const userCreateData: CreateUserType = {
+      userEmail: userInfoFromGoogle.userEmail,
       username: userInfoFromGoogle.username,
+      provider: Providers.Google,
+    };
+
+    const userFromDB = await this.getUserFromDB({
       userEmail: userInfoFromGoogle.userEmail,
       provider: Providers.Google,
     });
+
+    let user;
+
+    if (userFromDB) {
+      user = userFromDB;
+    } else {
+      user = await this.createUser(userCreateData);
+
+      await this.nodemailerService.sendRegistrationSuccessfulMessage(
+        user.email,
+      );
+    }
 
     // если использует клиент роут для логина через сторонние апи
     // надо проверить есть у него уже рефреш токен или нет
@@ -67,9 +86,9 @@ export class GoogleAuthHandler
     }
 
     return {
-      userId: userFromDB.id,
-      username: userFromDB.username,
-      accessToken: await this.tokensService.createAccessToken(userFromDB.id),
+      userId: user.id,
+      username: user.username,
+      accessToken: await this.tokensService.createAccessToken(user.id),
     };
   }
 
