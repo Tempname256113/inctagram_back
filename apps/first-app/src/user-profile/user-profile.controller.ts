@@ -23,7 +23,9 @@ export class UserProfileController {
   @UseGuards(AuthGuard)
   @Get()
   async findOne(@User() user: UserDecorator) {
-    return this.userProfileQueryRepository.getProfile(user.userId);
+    return this.userProfileQueryRepository.getProfile(user.userId, {
+      profileImage: { include: { image: true } },
+    });
   }
 
   @CreateUserProfileSwagger()

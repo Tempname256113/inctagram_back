@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsDate, IsOptional, IsString, Max } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, IsString, Max } from 'class-validator';
 import { parse } from 'date-fns';
 
 export class BaseUserProfileDto {
@@ -14,6 +14,11 @@ export class BaseUserProfileDto {
   @IsOptional()
   @ApiProperty({ example: 'German', required: false })
   country?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @ApiProperty({ example: 1, required: false })
+  fileId?: number;
 
   @IsString()
   @IsOptional()
