@@ -1,9 +1,5 @@
 import { UserChangePasswordRequestStates } from '@prisma/client';
 import { GoneException, NotFoundException } from '@nestjs/common';
-import {
-  AUTH_ERRORS,
-  CHANGE_PASSWORD_REQUEST_ERRORS,
-} from '../../../variables/validationErrors.messages';
 import { isBefore } from 'date-fns';
 import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
 import { UserRepository } from '../../../repositories/user.repository';
@@ -28,7 +24,7 @@ export class PasswordRecoveryCodeCheckFunction {
       );
 
     if (!foundChangePasswordRequest) {
-      throw new NotFoundException(CHANGE_PASSWORD_REQUEST_ERRORS.NOT_FOUND);
+      throw new NotFoundException('Change password request not found');
     }
 
     const passwordRecoveryCodeIsExpired = isBefore(
@@ -42,7 +38,7 @@ export class PasswordRecoveryCodeCheckFunction {
       );
 
       throw new GoneException({
-        message: AUTH_ERRORS.PASSWORD_TOKEN_EXPIRED,
+        message: 'Password token expired',
         userEmail: foundChangePasswordRequest.user.email,
       } as PasswordRecoveryCodeCheckResponseTypeSwagger);
     }

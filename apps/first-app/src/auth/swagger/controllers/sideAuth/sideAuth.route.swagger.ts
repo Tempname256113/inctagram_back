@@ -1,15 +1,15 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiBody,
   ApiOkResponse,
+  ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { SideAuthDtoSwagger } from '../../../dto/sideAuth.dto';
 import { SideAuthResponseTypeSwagger } from '../../../dto/response/sideAuth.responseType';
 
 export const SideAuthRouteSwaggerDescription = () => {
   return applyDecorators(
+    ApiOperation({ summary: 'Auth via side decisions' }),
     ApiOkResponse({
       description: 'Successful login/registration',
       type: SideAuthResponseTypeSwagger,
@@ -20,6 +20,5 @@ export const SideAuthRouteSwaggerDescription = () => {
     ApiUnauthorizedResponse({
       description: 'Provided invalid auth code',
     }),
-    ApiBody({ type: SideAuthDtoSwagger, required: true }),
   );
 };
