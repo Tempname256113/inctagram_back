@@ -14,13 +14,17 @@ import { AuthGuard } from 'shared/guards/auth.guard';
 import { User } from 'shared/decorators/user.decorator';
 import { UserDecorator } from 'shared/types/user/user.type';
 import { UploadFileDto } from './dto/upload-file.dto';
+import { ApiTags } from '@nestjs/swagger';
+import { CreateFileResourceRouteSwaggerDescription } from './swagger/createFileResource.swagger';
 
+@ApiTags('file-resourses controller')
 @Controller('file-resourse')
 export class FileResourseController {
   constructor(private readonly fileResourseService: FileResourseService) {}
 
   @UseGuards(AuthGuard)
   @Post('/upload')
+  @CreateFileResourceRouteSwaggerDescription()
   @UseInterceptors(FileInterceptor('file'))
   upload(
     @User() user: UserDecorator,
