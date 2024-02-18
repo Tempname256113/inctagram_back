@@ -75,14 +75,11 @@ export class GoogleAuthHandler
       );
     }
 
-    const isValidJwtToken: boolean =
-      !!this.tokensService.getTokenPayload(refreshToken);
-
     // если использует клиент роут для логина через сторонние апи
     // надо проверить есть у него уже рефреш токен или нет
     // если есть то не надо создавать новую сессию чтобы засорять базу
     // надо обновить существующую сессию
-    if (isValidJwtToken) {
+    if (refreshToken) {
       await this.updateUserSession({ refreshToken, res });
     } else {
       await this.createUserSession({ userId: userFromDB.id, res });
