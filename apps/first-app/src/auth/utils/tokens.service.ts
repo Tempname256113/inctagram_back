@@ -116,8 +116,12 @@ export class TokensService {
     };
   }
 
-  getTokenPayload(token: string): RefreshTokenPayloadType {
-    return this.jwtService.decode(token);
+  getTokenPayload(token: string): RefreshTokenPayloadType | null {
+    try {
+      return this.jwtService.decode(token);
+    } catch (err) {
+      return null;
+    }
   }
 
   async verifyRefreshToken(
