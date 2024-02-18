@@ -34,7 +34,7 @@ export class SideAuthController {
       new GoogleAuthCommand({
         googleCode: googleAuthCode.code,
         res,
-        refreshToken,
+        refreshToken: refreshToken ?? 'refreshToken',
       }),
     );
 
@@ -53,7 +53,7 @@ export class SideAuthController {
       new GithubAuthCommand({
         githubCode: githubAuthCode.code,
         res,
-        refreshToken,
+        refreshToken: refreshToken ?? 'refreshToken',
       }),
     );
 
