@@ -14,6 +14,7 @@ import {
   CreateUserType,
   SideAuthCommonFunctions,
 } from './common/sideAuth.commonFunctions';
+import { RefreshTokenPayloadType } from '../../types/tokens.models';
 
 export class GoogleAuthCommand {
   constructor(
@@ -75,11 +76,14 @@ export class GoogleAuthHandler
       );
     }
 
+    const providedRefreshTokenPayload: RefreshTokenPayloadType =
+      this.dependencies.tokensService.getTokenPayload(refreshToken);
+
     // если использует клиент роут для логина через сторонние апи
     // надо проверить есть у него уже рефреш токен или нет
     // если есть то не надо создавать новую сессию чтобы засорять базу
     // надо обновить существующую сессию
-    if (refreshToken) {
+    if (providedRefreshTokenPayload) {
       await this.updateUserSession({ refreshToken, res });
     } else {
       await this.createUserSession({ userId: userFromDB.id, res });
