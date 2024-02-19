@@ -60,12 +60,11 @@ export class AuthController {
   @LogoutRouteSwaggerDescription()
   async logout(
     @Cookies(refreshTokenCookieTitle) refreshToken: string,
-    @Response({ passthrough: true }) res: Res,
   ): Promise<void> {
     if (!refreshToken) {
       throw new UnauthorizedException('Provide refresh token for logout');
     }
 
-    await this.commandBus.execute(new LogoutCommand({ refreshToken, res }));
+    await this.commandBus.execute(new LogoutCommand({ refreshToken }));
   }
 }
