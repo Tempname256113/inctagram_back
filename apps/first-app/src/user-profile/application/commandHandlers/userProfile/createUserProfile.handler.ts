@@ -7,8 +7,8 @@ import {
 import { UserProfileRepository } from '../../../repositories/user-profile.repository';
 import { differenceInYears } from 'date-fns';
 import { BadRequestException } from '@nestjs/common';
-import { PrismaService } from 'shared/database/prisma.service';
 import { FileResourseService } from 'apps/first-app/src/file-resourse/file-resourse.service';
+import { ProfileImageRepository } from '../../../repositories/profile-image.repository';
 
 export class CreateUserProfileCommand {
   constructor(
@@ -32,7 +32,7 @@ export class CreateUserProfileHandler
 {
   constructor(
     private readonly userProfileRepository: UserProfileRepository,
-    private readonly prismaService: PrismaService,
+    private readonly profileImageRepository: ProfileImageRepository,
     private readonly fileResourceService: FileResourseService,
   ) {}
 
@@ -55,7 +55,7 @@ export class CreateUserProfileHandler
     });
 
     if (fileId) {
-      await this.createUserProfileAvatart({
+      await this.profileImageRepository.create({
         profileId: userId,
         imageId: fileId,
         kind: ProfileImagesKind.avatar,
@@ -63,16 +63,6 @@ export class CreateUserProfileHandler
     }
 
     return profile;
-  }
-
-  async createUserProfileAvatart(data: {
-    profileId: number;
-    imageId: number;
-    kind: ProfileImagesKind;
-  }) {
-    return this.prismaService.profileImage.create({
-      data,
-    });
   }
 
   checkAge(dateOfBirth: Date) {

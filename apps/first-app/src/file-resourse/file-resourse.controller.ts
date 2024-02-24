@@ -12,7 +12,7 @@ import { FileResourseService } from './file-resourse.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'shared/guards/auth.guard';
 import { User } from 'shared/decorators/user.decorator';
-import { UserDecorator } from 'shared/types/user/user.type';
+import { UserDecoratorType } from 'shared/types/user/user.type';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateFileResourceRouteSwaggerDescription } from './swagger/createFileResource.swagger';
@@ -27,7 +27,7 @@ export class FileResourseController {
   @CreateFileResourceRouteSwaggerDescription()
   @UseInterceptors(FileInterceptor('file'))
   upload(
-    @User() user: UserDecorator,
+    @User() user: UserDecoratorType,
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addMaxSizeValidator({

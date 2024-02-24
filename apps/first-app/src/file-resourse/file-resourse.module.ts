@@ -4,6 +4,8 @@ import { FileResourseController } from './file-resourse.controller';
 import { S3StorageAdapter } from 'shared/services/s3StorageAdapter.servece';
 import { TokensService } from '../auth/utils/tokens.service';
 import { JwtModule } from '@nestjs/jwt';
+import { FileResourseRepository } from 'shared/repositories/file-resourse.repository';
+import { FileResourseQueryRepository } from 'shared/repositories/query/file-resource-query.repository';
 import { PrismaService } from 'shared/database/prisma.service';
 
 @Module({
@@ -13,6 +15,8 @@ import { PrismaService } from 'shared/database/prisma.service';
     FileResourseService,
     S3StorageAdapter,
     TokensService,
+    FileResourseRepository,
+    FileResourseQueryRepository,
     PrismaService,
   ],
   exports: [FileResourseService],

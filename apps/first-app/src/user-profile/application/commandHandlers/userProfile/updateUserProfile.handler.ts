@@ -9,6 +9,8 @@ import { differenceInYears } from 'date-fns';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'shared/database/prisma.service';
 import { FileResourseService } from 'apps/first-app/src/file-resourse/file-resourse.service';
+import { ProfileImageQueryRepository } from '../../../repositories/query/profile-image-query.repository';
+import { ProfileImageRepository } from '../../../repositories/profile-image.repository';
 
 export class UpdateUserProfileCommand {
   constructor(
@@ -34,6 +36,8 @@ export class UpdateUserProfileHandler
     private readonly userProfileRepository: UserProfileRepository,
     private readonly prismaService: PrismaService,
     private readonly fileResourceService: FileResourseService,
+    private readonly profileImageQueryRepository: ProfileImageQueryRepository,
+    private readonly profileImageRepository: ProfileImageRepository,
   ) {}
 
   async execute(command: UpdateUserProfileCommand) {
@@ -58,18 +62,16 @@ export class UpdateUserProfileHandler
         file: profileImage.image,
       });
 
-      await this.prismaService.profileImage.delete({
-        where: {
-          id: profileImage.id,
-          profileId: userId,
-          imageId: { not: fileId },
-          kind: ProfileImagesKind.avatar,
-        },
+      await this.profileImageRepository.delete({
+        id: profileImage.id,
+        profileId: userId,
+        imageId: { not: fileId },
+        kind: ProfileImagesKind.avatar,
       });
 
       if (fileId) {
         const existProfileImage =
-          await this.prismaService.profileImage.findFirst({
+          await this.profileImageQueryRepository.findFirst({
             where: {
               profileId: userId,
               imageId: { not: fileId },
@@ -78,12 +80,10 @@ export class UpdateUserProfileHandler
           });
 
         if (!existProfileImage) {
-          await this.prismaService.profileImage.create({
-            data: {
-              profileId: userId,
-              imageId: fileId,
-              kind: ProfileImagesKind.avatar,
-            },
+          await this.profileImageRepository.create({
+            profileId: userId,
+            imageId: fileId,
+            kind: ProfileImagesKind.avatar,
           });
         }
       }
@@ -102,7 +102,7 @@ export class UpdateUserProfileHandler
     userId: number;
     fileId: number;
   }) {
-    const profileImage = await this.prismaService.profileImage.findFirst({
+    const profileImage = await this.profileImageQueryRepository.findFirst({
       where: {
         profileId: userId,
         imageId: { not: fileId },

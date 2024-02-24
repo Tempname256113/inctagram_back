@@ -5,15 +5,17 @@ import {
 } from '@nestjs/common';
 import { S3StorageAdapter } from 'shared/services/s3StorageAdapter.servece';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { PrismaService } from 'shared/database/prisma.service';
 import { FileResource, FileResourceTypes, Prisma } from '@prisma/client';
 import { flatten } from 'lodash';
+import { FileResourseRepository } from 'shared/repositories/file-resourse.repository';
+import { FileResourseQueryRepository } from 'shared/repositories/query/file-resource-query.repository';
 
 @Injectable()
 export class FileResourseService {
   constructor(
     private readonly s3StorageAdapter: S3StorageAdapter,
-    private readonly prismaService: PrismaService,
+    private readonly fileResourseRepository: FileResourseRepository,
+    private readonly fileResourseQueryRepository: FileResourseQueryRepository,
   ) {}
 
   getFileFolder(params: { type: FileResourceTypes; userId: number }) {
@@ -41,9 +43,8 @@ export class FileResourseService {
 
     if (type) where.type = type;
 
-    const fileResourceCount = await this.prismaService.fileResource.count({
-      where,
-    });
+    const fileResourceCount =
+      await this.fileResourseQueryRepository.count(where);
 
     return fileResourceCount === flatten([fileId]).length;
   }
@@ -73,21 +74,19 @@ export class FileResourseService {
 
     const { url, path } = await this.s3StorageAdapter.upload({ file, folder });
 
-    return this.prismaService.fileResource.create({
-      data: {
-        type: data.type,
-        contentType: file.mimetype,
-        size: file.size,
-        path,
-        url,
-        createdById: userId,
-      },
+    return this.fileResourseRepository.create({
+      type: data.type,
+      contentType: file.mimetype,
+      size: file.size,
+      path,
+      url,
+      createdById: userId,
     });
   }
 
   async delete({ file }: { file: FileResource }) {
     await this.s3StorageAdapter.delete(file.path);
 
-    await this.prismaService.fileResource.delete({ where: { id: file.id } });
+    await this.fileResourseRepository.delete({ id: file.id });
   }
 }
