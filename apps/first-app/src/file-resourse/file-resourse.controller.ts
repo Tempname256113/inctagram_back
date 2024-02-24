@@ -31,14 +31,15 @@ export class FileResourseController {
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addMaxSizeValidator({
-          maxSize: 5000,
+          maxSize: 500000,
+          message: 'Pics size must have <= 500000 kb (0,5 MB)',
         })
+        .addFileTypeValidator({ fileType: '.(png|jpeg|jpg)' })
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         }),
     )
     file: Express.Multer.File,
-
     @Body() uploadfileDto: UploadFileDto,
   ) {
     return this.fileResourseService.upload({
