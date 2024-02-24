@@ -3,13 +3,10 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'shared/database/prisma.service';
 
 @Injectable()
-export class UserProfileQueryRepository {
+export class FileResourseQueryRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async getProfile(userId: number, include?: Prisma.UserProfileInclude) {
-    return this.prismaService.userProfile.findUnique({
-      where: { userId },
-      include,
-    });
+  async count(where: Prisma.FileResourceWhereInput) {
+    return this.prismaService.fileResource.count({ where });
   }
 }

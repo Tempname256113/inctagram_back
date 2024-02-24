@@ -1,11 +1,6 @@
 import { ConfigService, ConfigType } from '@nestjs/config';
 import appConfig from '../../../../../shared/config/app.config.service';
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { add, getUnixTime } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
 import {

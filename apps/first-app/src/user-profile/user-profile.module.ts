@@ -9,15 +9,22 @@ import { CreateUserProfileHandler } from './application/commandHandlers/userProf
 import { UserQueryRepository } from '../auth/repositories/query/user.queryRepository';
 import { UpdateUserProfileHandler } from './application/commandHandlers/userProfile/updateUserProfile.handler';
 import { PrismaService } from 'shared/database/prisma.service';
+import { FileResourseModule } from '../file-resourse/file-resourse.module';
+import { ProfileImageRepository } from './repositories/profile-image.repository';
+import { ProfileImageQueryRepository } from './repositories/query/profile-image-query.repository';
 
 const commandHandlers = [CreateUserProfileHandler, UpdateUserProfileHandler];
 
-const repos = [UserProfileRepository];
+const repos = [UserProfileRepository, ProfileImageRepository];
 
-const queryRepos = [UserProfileQueryRepository, UserQueryRepository];
+const queryRepos = [
+  UserProfileQueryRepository,
+  UserQueryRepository,
+  ProfileImageQueryRepository,
+];
 
 @Module({
-  imports: [JwtModule, CqrsModule],
+  imports: [JwtModule, CqrsModule, FileResourseModule],
   controllers: [UserProfileController],
   providers: [
     TokensService,
