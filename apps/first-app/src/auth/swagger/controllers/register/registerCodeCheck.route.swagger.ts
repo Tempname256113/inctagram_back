@@ -1,21 +1,17 @@
 import { applyDecorators } from '@nestjs/common';
 import {
-  ApiBody,
   ApiGoneResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
+  ApiOperation,
 } from '@nestjs/swagger';
-import {
-  RegisterCodeCheckDtoSwagger,
-  RegisterCodeCheckResponseTypeSwagger,
-} from '../../../dto/register.dto';
+import { RegisterCodeCheckResponseTypeSwagger } from '../../../dto/register.dto';
 
 export const RegisterCodeCheckRouteSwaggerDescription = () => {
   return applyDecorators(
-    ApiBody({
-      type: RegisterCodeCheckDtoSwagger,
-      description: 'Provide a valid code from the email link',
-      required: true,
+    ApiOperation({
+      summary: 'Check register code from email link',
+      description: 'You need provide code from link on email message',
     }),
     ApiNoContentResponse({ description: 'User email is confirmed' }),
     ApiNotFoundResponse({

@@ -1,11 +1,16 @@
 import { UserQueryRepository } from '../../../repositories/query/user.queryRepository';
 import { UserRepository } from '../../../repositories/user.repository';
 import { TokensService } from '../../../utils/tokens.service';
-import { NodemailerService } from '../../../utils/nodemailer.service';
 import { Response } from 'express';
 import { RefreshTokenPayloadType } from '../../../types/tokens.models';
 import { Providers } from '@prisma/client';
 import * as crypto from 'crypto';
+
+export type CreateUserType = {
+  username: string;
+  userEmail: string;
+  provider: Providers;
+};
 
 export class SideAuthCommonFunctions {
   constructor(
@@ -13,42 +18,40 @@ export class SideAuthCommonFunctions {
       userQueryRepository: UserQueryRepository;
       userRepository: UserRepository;
       tokensService: TokensService;
-      nodemailerService: NodemailerService;
     },
   ) {}
 
-  async getUserFromDB(data: {
-    username: string;
-    userEmail: string;
-    provider: Providers;
-  }) {
-    const { username, userEmail, provider } = data;
+  protected async getUserFromDB(data: Omit<CreateUserType, 'username'>) {
+    const { userEmail, provider } = data;
 
-    let user =
+    const user =
       await this.dependencies.userQueryRepository.getUserByEmail(userEmail);
 
-    if (!user) {
-      user = await this.dependencies.userRepository.createUser({
-        user: { email: userEmail, username },
-        emailInfo: { provider, emailIsConfirmed: true },
-      });
-
-      await this.dependencies.nodemailerService.sendRegistrationSuccessfulMessage(
-        user.email,
-      );
-    }
-
-    if (user.userEmailInfo.provider !== provider) {
-      await this.dependencies.userRepository.updateEmailInfoByUserId(user.id, {
-        provider,
-        emailIsConfirmed: true,
-      });
+    if (user) {
+      if (user.userEmailInfo.provider !== provider) {
+        await this.dependencies.userRepository.updateEmailInfoByUserId(
+          user.id,
+          {
+            provider,
+            emailIsConfirmed: true,
+          },
+        );
+      }
     }
 
     return user;
   }
 
-  async createUserSession(data: {
+  protected async createUser(data: CreateUserType) {
+    const { username, userEmail, provider } = data;
+
+    return this.dependencies.userRepository.createUser({
+      user: { email: userEmail, username },
+      emailInfo: { provider, emailIsConfirmed: true },
+    });
+  }
+
+  protected async createUserSession(data: {
     userId: number;
     res: Response;
   }): Promise<void> {
@@ -80,7 +83,7 @@ export class SideAuthCommonFunctions {
     });
   }
 
-  async updateUserSession(data: {
+  protected async updateUserSession(data: {
     refreshToken: string;
     res: Response;
   }): Promise<void> {
