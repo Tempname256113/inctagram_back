@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { S3StorageAdapter } from 'shared/services/s3StorageAdapter.servece';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { FileResource, FileResourceTypes, Prisma } from '@prisma/client';
+import { FileResource, FileResourceTypes } from '@prisma/client';
 import { flatten } from 'lodash';
 import { FileResourseRepository } from 'shared/repositories/file-resourse.repository';
 import { FileResourseQueryRepository } from 'shared/repositories/query/file-resource-query.repository';
@@ -27,26 +27,20 @@ export class FileResourseService {
     }
   }
 
-  private async checkCountFileResourse({
-    userId,
-    fileId,
-    type,
-  }: {
+  private async checkCountFileResourse(data: {
     userId: number;
     fileId: number | number[];
     type: FileResourceTypes;
   }) {
-    const where: Prisma.FileResourceWhereInput = {
-      id: { in: flatten([fileId]) },
-      createdById: userId,
-    };
+    const fileIds: number[] = flatten([data.fileId]);
 
-    if (type) where.type = type;
+    const fileResourceCount = await this.fileResourseQueryRepository.getCount({
+      fileIds,
+      createdById: data.userId,
+      type: data.type,
+    });
 
-    const fileResourceCount =
-      await this.fileResourseQueryRepository.count(where);
-
-    return fileResourceCount === flatten([fileId]).length;
+    return fileResourceCount === fileIds.length;
   }
 
   async canManageFileResource(data: {

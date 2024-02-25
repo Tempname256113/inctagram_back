@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EnvModule } from '../../../shared/config/config.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
-import { FileResourseModule } from './file-resourse/file-resourse.module';
+import { FileResourseModule } from './file-resourse/file-resource.module';
 import { UserPostsModule } from './user-posts/user-posts.module';
 
 @Module({

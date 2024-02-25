@@ -7,7 +7,7 @@ import {
 import { UserProfileRepository } from '../../../repositories/user-profile.repository';
 import { differenceInYears } from 'date-fns';
 import { BadRequestException } from '@nestjs/common';
-import { FileResourseService } from 'apps/first-app/src/file-resourse/file-resourse.service';
+import { FileResourseService } from 'apps/first-app/src/file-resourse/file-resource.service';
 import { ProfileImageRepository } from '../../../repositories/profile-image.repository';
 
 export class CreateUserProfileCommand {

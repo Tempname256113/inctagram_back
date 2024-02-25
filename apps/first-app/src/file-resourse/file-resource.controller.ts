@@ -8,7 +8,7 @@ import {
   ParseFilePipeBuilder,
   HttpStatus,
 } from '@nestjs/common';
-import { FileResourseService } from './file-resourse.service';
+import { FileResourseService } from './file-resource.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'shared/guards/auth.guard';
 import { User } from 'shared/decorators/user.decorator';
