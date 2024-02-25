@@ -3,7 +3,7 @@ import { FileResourceTypes } from '@prisma/client';
 import { PrismaService } from 'shared/database/prisma.service';
 
 @Injectable()
-export class FileResourseQueryRepository {
+export class FileResourceQueryRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getCount(data: {

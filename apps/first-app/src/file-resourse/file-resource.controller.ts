@@ -8,7 +8,7 @@ import {
   ParseFilePipeBuilder,
   HttpStatus,
 } from '@nestjs/common';
-import { FileResourseService } from './file-resource.service';
+import { FileResourceService } from './file-resource.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'shared/guards/auth.guard';
 import { User } from 'shared/decorators/user.decorator';
@@ -20,7 +20,7 @@ import { CreateFileResourceRouteSwaggerDescription } from './swagger/createFileR
 @ApiTags('file-resourses controller')
 @Controller('file-resourse')
 export class FileResourseController {
-  constructor(private readonly fileResourseService: FileResourseService) {}
+  constructor(private readonly fileResourseService: FileResourceService) {}
 
   @UseGuards(AuthGuard)
   @Post('/upload')

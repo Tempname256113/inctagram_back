@@ -1,8 +1,12 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, Length } from 'class-validator';
 import { BaseUserProfileDto } from './base-user-profile.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserProfileDto extends BaseUserProfileDto {
+  @IsNumber()
+  @ApiProperty({ example: 33 })
+  userId: number;
+
   @IsNotEmpty()
   @IsString()
   @Length(6, 30, { message: 'Username must contains 6 - 30 length' })

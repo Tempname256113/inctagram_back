@@ -7,23 +7,12 @@ import {
 import { UserProfileRepository } from '../../../repositories/user-profile.repository';
 import { differenceInYears } from 'date-fns';
 import { BadRequestException } from '@nestjs/common';
-import { FileResourseService } from 'apps/first-app/src/file-resourse/file-resource.service';
+import { FileResourceService } from 'apps/first-app/src/file-resourse/file-resource.service';
 import { ProfileImageRepository } from '../../../repositories/profile-image.repository';
+import { CreateUserProfileDto } from '../../../dto/create-user-profile.dto';
 
 export class CreateUserProfileCommand {
-  constructor(
-    public readonly data: {
-      userId: number;
-      username: string;
-      firstName: string;
-      lastName: string;
-      dateOfBirth?: Date;
-      country?: string;
-      city?: string;
-      aboutMe?: string;
-      fileId?: number;
-    },
-  ) {}
+  constructor(public readonly data: CreateUserProfileDto) {}
 }
 
 @CommandHandler(CreateUserProfileCommand)
@@ -33,7 +22,7 @@ export class CreateUserProfileHandler
   constructor(
     private readonly userProfileRepository: UserProfileRepository,
     private readonly profileImageRepository: ProfileImageRepository,
-    private readonly fileResourceService: FileResourseService,
+    private readonly fileResourceService: FileResourceService,
   ) {}
 
   async execute(command: CreateUserProfileCommand) {

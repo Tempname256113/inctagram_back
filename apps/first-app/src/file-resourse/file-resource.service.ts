@@ -7,15 +7,21 @@ import { S3StorageAdapter } from 'shared/services/s3StorageAdapter.servece';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { FileResource, FileResourceTypes } from '@prisma/client';
 import { flatten } from 'lodash';
-import { FileResourseRepository } from 'shared/repositories/file-resourse.repository';
-import { FileResourseQueryRepository } from 'shared/repositories/query/file-resource-query.repository';
+import { FileResourceRepository } from 'shared/repositories/file-resourse.repository';
+import { FileResourceQueryRepository } from 'shared/repositories/query/file-resource-query.repository';
+
+type CanManageFileType = {
+  userId: number;
+  fileId: number | number[];
+  type: FileResourceTypes;
+};
 
 @Injectable()
-export class FileResourseService {
+export class FileResourceService {
   constructor(
     private readonly s3StorageAdapter: S3StorageAdapter,
-    private readonly fileResourseRepository: FileResourseRepository,
-    private readonly fileResourseQueryRepository: FileResourseQueryRepository,
+    private readonly fileResourceRepository: FileResourceRepository,
+    private readonly fileResourceQueryRepository: FileResourceQueryRepository,
   ) {}
 
   getFileFolder(params: { type: FileResourceTypes; userId: number }) {
@@ -27,14 +33,13 @@ export class FileResourseService {
     }
   }
 
-  private async checkCountFileResourse(data: {
-    userId: number;
-    fileId: number | number[];
-    type: FileResourceTypes;
-  }) {
+  private async checkCountFileResource(data: CanManageFileType) {
     const fileIds: number[] = flatten([data.fileId]);
 
-    const fileResourceCount = await this.fileResourseQueryRepository.getCount({
+    // сюда передается массив с fileIds
+    // если вернется из бд количество сущностей меньше чем передавалось
+    // значит какие то из передаваемых fileIds были украдены у другого юзера
+    const fileResourceCount = await this.fileResourceQueryRepository.getCount({
       fileIds,
       createdById: data.userId,
       type: data.type,
@@ -43,12 +48,10 @@ export class FileResourseService {
     return fileResourceCount === fileIds.length;
   }
 
-  async canManageFileResource(data: {
-    userId: number;
-    fileId: number;
-    type: FileResourceTypes;
-  }) {
-    if (data.userId && (await this.checkCountFileResourse(data))) {
+  async canManageFileResource(data: CanManageFileType) {
+    const allEntitiesIsMine: boolean = await this.checkCountFileResource(data);
+
+    if (data.fileId && !allEntitiesIsMine) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -68,7 +71,7 @@ export class FileResourseService {
 
     const { url, path } = await this.s3StorageAdapter.upload({ file, folder });
 
-    return this.fileResourseRepository.create({
+    return this.fileResourceRepository.create({
       type: data.type,
       contentType: file.mimetype,
       size: file.size,
@@ -81,6 +84,6 @@ export class FileResourseService {
   async delete({ file }: { file: FileResource }) {
     await this.s3StorageAdapter.delete(file.path);
 
-    await this.fileResourseRepository.delete({ id: file.id });
+    await this.fileResourceRepository.delete({ id: file.id });
   }
 }
