@@ -42,6 +42,7 @@ model User {
   userSessions               UserSession[]
   UserProfile                UserProfile?
   FileResource               FileResource[]
+  posts                      UserPost[]
 
   @@map("users")
 }
@@ -122,8 +123,22 @@ model UserProfile {
   @@map("user_profiles")
 }
 
+model UserPost {
+  id     Int @id @default(autoincrement())
+  userId Int @unique
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+  deleted   Boolean
+
+  images PostImage[]
+  user   User        @relation(fields: [userId], references: [id])
+}
+
 enum FileResourceTypes {
   profilePhoto
+  postPhoto
 }
 
 model FileResource {
@@ -140,10 +155,20 @@ model FileResource {
   createdById Int
 
   profileImage ProfileImage[]
+  postImage    PostImage?
 
   createdBy User @relation(fields: [createdById], references: [id])
 
   @@map("file_resources")
+}
+
+model PostImage {
+  id      Int @id @default(autoincrement())
+  postId  Int @unique
+  imageId Int @unique
+
+  image FileResource @relation(fields: [imageId], references: [id])
+  post  UserPost     @relation(fields: [postId], references: [id])
 }
 
 enum ProfileImagesKind {
