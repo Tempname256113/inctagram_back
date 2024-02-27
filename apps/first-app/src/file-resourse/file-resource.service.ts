@@ -4,7 +4,6 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { S3StorageAdapter } from 'shared/services/s3StorageAdapter.servece';
-import { UploadFileDto } from './dto/upload-file.dto';
 import { FileResource, FileResourceTypes } from '@prisma/client';
 import { flatten } from 'lodash';
 import { FileResourceRepository } from 'shared/repositories/file-resourse.repository';
@@ -24,13 +23,30 @@ export class FileResourceService {
     private readonly fileResourceQueryRepository: FileResourceQueryRepository,
   ) {}
 
-  getFileFolder(params: { type: FileResourceTypes; userId: number }) {
-    switch (params.type) {
+  getFileFolder(params: {
+    imageType: FileResourceTypes;
+    userId: number;
+    postId?: number;
+  }) {
+    switch (params.imageType) {
       case FileResourceTypes.profilePhoto:
         return `users/${params.userId}/profilePhoto`;
+      case FileResourceTypes.postPhoto:
+        if (!params.postId) {
+          throw new Error('Provide post id');
+        }
+
+        return `users/${params.userId}/posts/${params.postId}`;
       default:
         throw new BadRequestException('File type not found');
     }
+  }
+
+  getPostImageFolder(params: { userId: number; postId: number }) {
+    return this.getFileFolder({
+      ...params,
+      imageType: FileResourceTypes.postPhoto,
+    });
   }
 
   private async checkCountFileResource(data: CanManageFileType) {
@@ -61,18 +77,18 @@ export class FileResourceService {
   async upload({
     userId,
     file,
-    data,
+    imageType,
   }: {
     userId: number;
     file: Express.Multer.File;
-    data: UploadFileDto;
+    imageType: FileResourceTypes;
   }) {
-    const folder = this.getFileFolder({ userId, type: data.type });
+    const folder = this.getFileFolder({ userId, imageType });
 
     const { url, path } = await this.s3StorageAdapter.upload({ file, folder });
 
     return this.fileResourceRepository.create({
-      type: data.type,
+      type: imageType,
       contentType: file.mimetype,
       size: file.size,
       path,
@@ -81,9 +97,42 @@ export class FileResourceService {
     });
   }
 
-  async delete({ file }: { file: FileResource }) {
-    await this.s3StorageAdapter.delete(file.path);
+  async uploadPostImagesToBucketAndDB(data: {
+    userId: number;
+    postId: number;
+    images: Express.Multer.File[];
+  }) {
+    const uploadImagesToDB = [];
 
-    await this.fileResourceRepository.delete({ id: file.id });
+    for (const postImage of data.images) {
+      const folder = this.getPostImageFolder({
+        userId: data.userId,
+        postId: data.postId,
+      });
+
+      const { url, path } = await this.s3StorageAdapter.upload({
+        file: postImage,
+        folder,
+      });
+
+      uploadImagesToDB.push(
+        this.fileResourceRepository.create({
+          type: FileResourceTypes.postPhoto,
+          contentType: postImage.mimetype,
+          size: postImage.size,
+          path,
+          url,
+          createdById: data.userId,
+        }),
+      );
+    }
+
+    return Promise.all(uploadImagesToDB);
+  }
+
+  async delete(data: { imagePath: string; imageId: number }) {
+    await this.s3StorageAdapter.delete(data.imagePath);
+
+    await this.fileResourceRepository.delete({ id: data.imageId });
   }
 }

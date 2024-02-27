@@ -124,8 +124,9 @@ model UserProfile {
 }
 
 model UserPost {
-  id     Int @id @default(autoincrement())
-  userId Int @unique
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  description String? @db.VarChar(500)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt

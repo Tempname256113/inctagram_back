@@ -59,7 +59,8 @@ export class UpdateUserProfileHandler
       const profileImage = await this.getProfileImage({ userId, fileId });
 
       await this.fileResourceService.delete({
-        file: profileImage.image,
+        imagePath: profileImage.image.path,
+        imageId: profileImage.image.id,
       });
 
       await this.profileImageRepository.delete({

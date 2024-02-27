@@ -45,7 +45,7 @@ export class FileResourseController {
     return this.fileResourseService.upload({
       userId: user.userId,
       file,
-      data: uploadfileDto,
+      imageType: uploadfileDto,
     });
   }
 }

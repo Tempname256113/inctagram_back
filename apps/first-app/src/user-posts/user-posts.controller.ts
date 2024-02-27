@@ -40,9 +40,9 @@ export class UserPostsController {
         }),
     )
     postPics: Express.Multer.File[],
-    @Body() CreatePostDto: CreatePostDto,
+    @Body() createPostDto: CreatePostDto,
   ) {
     console.log('post pics', postPics);
-    console.log('body', CreatePostDto);
+    console.log('body', createPostDto);
   }
 }
