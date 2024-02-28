@@ -17,7 +17,7 @@
 // эта команда применяет существующие миграции
 
 generator client {
-  provider        = "prisma-client-js"
+  provider        = "prisma-kysely"
   previewFeatures = ["postgresqlExtensions"]
   binaryTargets   = ["native", "rhel-openssl-1.0.x"]
 }
