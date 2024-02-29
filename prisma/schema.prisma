@@ -17,7 +17,7 @@
 // эта команда применяет существующие миграции
 
 generator client {
-  provider        = "prisma-kysely"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
   binaryTargets   = ["native", "rhel-openssl-1.0.x"]
 }
@@ -125,16 +125,16 @@ model UserProfile {
 
 model UserPost {
   id          Int     @id @default(autoincrement())
-  userId      Int     @unique
+  userId      Int
   description String? @db.VarChar(500)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-  deletedAt DateTime?
-  deleted   Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-  images PostImage[]
-  user   User        @relation(fields: [userId], references: [id])
+  user   User           @relation(fields: [userId], references: [id])
+  images FileResource[]
+
+  @@map("user_posts")
 }
 
 enum FileResourceTypes {
@@ -156,20 +156,12 @@ model FileResource {
   createdById Int
 
   profileImage ProfileImage[]
-  postImage    PostImage?
+  postId       Int
+  userPost     UserPost       @relation(fields: [postId], references: [id])
 
   createdBy User @relation(fields: [createdById], references: [id])
 
   @@map("file_resources")
-}
-
-model PostImage {
-  id      Int @id @default(autoincrement())
-  postId  Int @unique
-  imageId Int @unique
-
-  image FileResource @relation(fields: [imageId], references: [id])
-  post  UserPost     @relation(fields: [postId], references: [id])
 }
 
 enum ProfileImagesKind {

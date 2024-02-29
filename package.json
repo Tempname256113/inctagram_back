@@ -45,12 +45,9 @@
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
     "date-fns": "^2.30.0",
-    "kysely": "^0.27.2",
     "lodash": "^4.17.21",
     "nodemailer": "^6.9.7",
     "pg": "^8.11.3",
-    "prisma-extension-kysely": "^2.1.0",
-    "prisma-kysely": "^1.8.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },
