@@ -6,12 +6,13 @@ import { Prisma } from '@prisma/client';
 export class UserPostsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  createPost(data: { userId: number; description?: string }) {
+  async createPost(data: { userId: number; description?: string }) {
     return this.prisma.userPost.create({
       data: {
         userId: data.userId,
         description: data.description ?? null,
       } as Prisma.UserPostUncheckedCreateInput,
+      include: { images: true, user: true },
     });
   }
 }

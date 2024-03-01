@@ -94,6 +94,7 @@ export class FileResourceService {
       path,
       url,
       createdById: userId,
+      postId: null,
     });
   }
 
@@ -102,7 +103,7 @@ export class FileResourceService {
     postId: number;
     images: Express.Multer.File[];
   }) {
-    const uploadImagesToDB = [];
+    const uploadImagesToDB: Promise<FileResource>[] = [];
 
     for (const postImage of data.images) {
       const folder = this.getPostImageFolder({
@@ -123,6 +124,7 @@ export class FileResourceService {
           path,
           url,
           createdById: data.userId,
+          postId: data.postId,
         }),
       );
     }

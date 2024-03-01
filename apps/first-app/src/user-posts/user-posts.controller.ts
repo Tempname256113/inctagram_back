@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  HttpCode,
   HttpStatus,
   ParseFilePipeBuilder,
   Post,
@@ -13,6 +14,14 @@ import { AuthGuard } from '../../../../shared/guards/auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CreatePostDto } from './dto/createPostDto';
 import { ApiTags } from '@nestjs/swagger';
+import { CommandBus } from '@nestjs/cqrs';
+import {
+  CreatePostCommand,
+  CreateUserPostReturnType,
+} from './application/createPost.handler';
+import { User } from '../../../../shared/decorators/user.decorator';
+import { UserDecoratorType } from '../../../../shared/types/user/user.type';
+import { CreateUserPostRouteSwaggerDescription } from './swagger/controller/createUserPost.route.swagger';
 
 const picsErrorMessage = `The photo(s) must be less than or equal 0,5 Mb and have JPEG or PNG format`;
 
@@ -20,10 +29,12 @@ const picsErrorMessage = `The photo(s) must be less than or equal 0,5 Mb and hav
 @Controller('user-posts')
 // @UseGuards(AuthGuard)
 export class UserPostsController {
-  constructor() {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FilesInterceptor('files', 10))
+  @CreateUserPostRouteSwaggerDescription()
   createPost(
     @UploadedFiles(
       new ParseFilePipeBuilder()
@@ -39,10 +50,16 @@ export class UserPostsController {
           },
         }),
     )
-    postPics: Express.Multer.File[],
+    postImages: Express.Multer.File[],
     @Body() createPostDto: CreatePostDto,
-  ) {
-    console.log('post pics', postPics);
-    console.log('body', createPostDto);
+    @User() user: UserDecoratorType,
+  ): Promise<CreateUserPostReturnType> {
+    return this.commandBus.execute(
+      new CreatePostCommand({
+        userId: user.userId,
+        images: postImages,
+        description: createPostDto.description,
+      }),
+    );
   }
 }
