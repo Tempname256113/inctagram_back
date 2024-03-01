@@ -30,6 +30,7 @@ import { UserPostReturnType } from './dto/userPostReturnTypes';
 import { DeleteUserPostCommand } from './application/deleteUserPost.handler';
 import { DeleteUserPostRouteSwaggerDescription } from './swagger/controller/deleteUserPost.route.swagger';
 import { UserPostsQueryRepository } from './repositories/userPosts.queryRepository';
+import { GetUserPostsRouteSwaggerDescription } from './swagger/controller/getUserPosts.route.swagger';
 
 const picsErrorMessage = `The photo(s) must be less than or equal 0,5 Mb and have JPEG or PNG format`;
 
@@ -104,6 +105,7 @@ export class UserPostsController {
 
   @Get(':page')
   @HttpCode(HttpStatus.OK)
+  @GetUserPostsRouteSwaggerDescription()
   async getPosts(
     @Param('page') page: number,
     @User() user: UserDecoratorType,
