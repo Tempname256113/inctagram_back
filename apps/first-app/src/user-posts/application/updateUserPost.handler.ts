@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserPostsRepository } from '../repositories/userPosts.repository';
 import { UserPostsQueryRepository } from '../repositories/userPosts.queryRepository';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { UserPostReturnType } from '../dto/userPostReturnTypes';
 
 export class UpdateUserPostCommand {
   constructor(
@@ -15,14 +16,16 @@ export class UpdateUserPostCommand {
 
 @CommandHandler(UpdateUserPostCommand)
 export class UpdateUserPostHandler
-  implements ICommandHandler<UpdateUserPostCommand, void>
+  implements ICommandHandler<UpdateUserPostCommand, UserPostReturnType>
 {
   constructor(
     private readonly postsRepository: UserPostsRepository,
     private readonly postsQueryRepository: UserPostsQueryRepository,
   ) {}
 
-  async execute({ data: command }: UpdateUserPostCommand): Promise<void> {
+  async execute({
+    data: command,
+  }: UpdateUserPostCommand): Promise<UserPostReturnType> {
     const foundPost = await this.postsQueryRepository.getPostById(
       command.userPostId,
     );
@@ -37,9 +40,20 @@ export class UpdateUserPostHandler
       );
     }
 
-    await this.postsRepository.updatePostDescriptionByPostId({
-      postId: command.userPostId,
-      description: command.description,
-    });
+    const updatedPost =
+      await this.postsRepository.updatePostDescriptionByPostId({
+        postId: command.userPostId,
+        description: command.description,
+      });
+
+    return {
+      postId: updatedPost.id,
+      postDescription: updatedPost.description,
+      postImages: updatedPost.images
+        .sort((a, b) => a.id - b.id)
+        .map((image) => {
+          return { imageId: image.id, imageUrl: image.url };
+        }),
+    };
   }
 }

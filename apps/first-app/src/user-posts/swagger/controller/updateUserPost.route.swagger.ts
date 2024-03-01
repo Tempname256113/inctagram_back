@@ -1,16 +1,20 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiForbiddenResponse,
-  ApiNoContentResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { UserPostReturnType } from '../../dto/userPostReturnTypes';
 
 export const UpdateUserPostRouteSwaggerDescription = () => {
   return applyDecorators(
     ApiOperation({ summary: 'Update user post' }),
-    ApiNoContentResponse({ description: 'User post was updated' }),
+    ApiOkResponse({
+      description: 'User post was updated',
+      type: UserPostReturnType,
+    }),
     ApiUnauthorizedResponse({
       description: 'You must provide valid access token to access this route',
     }),

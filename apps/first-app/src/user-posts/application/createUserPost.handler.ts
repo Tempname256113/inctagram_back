@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { FileResourceService } from '../../file-resourse/file-resource.service';
 import { UserPostsRepository } from '../repositories/userPosts.repository';
-import { ApiProperty } from '@nestjs/swagger';
+import { UserPostReturnType } from '../dto/userPostReturnTypes';
 
 export class CreateUserPostCommand {
   constructor(
@@ -13,28 +13,9 @@ export class CreateUserPostCommand {
   ) {}
 }
 
-class CreatedPostImagesType {
-  @ApiProperty({ type: 'number', example: 256113 })
-  imageId: number;
-
-  @ApiProperty({ type: 'string' })
-  imageUrl: string;
-}
-
-export class CreateUserPostReturnType {
-  @ApiProperty({ type: 'number', example: 33 })
-  createdPostId: number;
-
-  @ApiProperty({ type: 'string' })
-  createdPostDescription?: string;
-
-  @ApiProperty({ type: [CreatedPostImagesType] })
-  createdPostImages: { imageId: number; imageUrl: string }[];
-}
-
 @CommandHandler(CreateUserPostCommand)
 export class CreateUserPostHandler
-  implements ICommandHandler<CreateUserPostCommand, CreateUserPostReturnType>
+  implements ICommandHandler<CreateUserPostCommand, UserPostReturnType>
 {
   constructor(
     private readonly imageService: FileResourceService,
@@ -43,7 +24,7 @@ export class CreateUserPostHandler
 
   async execute({
     data: command,
-  }: CreateUserPostCommand): Promise<CreateUserPostReturnType> {
+  }: CreateUserPostCommand): Promise<UserPostReturnType> {
     const createdPost = await this.postsRepository.createPost({
       userId: command.userId,
       description: command.description,
@@ -57,9 +38,9 @@ export class CreateUserPostHandler
       });
 
     return {
-      createdPostId: createdPost.id,
-      createdPostDescription: createdPost.description ?? null,
-      createdPostImages: loadedImagesForPost
+      postId: createdPost.id,
+      postDescription: createdPost.description ?? null,
+      postImages: loadedImagesForPost
         .sort((a, b) => a.id - b.id)
         .map((loadedImage) => {
           return { imageId: loadedImage.id, imageUrl: loadedImage.url };

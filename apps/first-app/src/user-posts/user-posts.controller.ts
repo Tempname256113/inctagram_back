@@ -16,16 +16,14 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { CreateUserPostDto } from './dto/createUserPost.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { CommandBus } from '@nestjs/cqrs';
-import {
-  CreateUserPostCommand,
-  CreateUserPostReturnType,
-} from './application/createUserPost.handler';
+import { CreateUserPostCommand } from './application/createUserPost.handler';
 import { User } from '../../../../shared/decorators/user.decorator';
 import { UserDecoratorType } from '../../../../shared/types/user/user.type';
 import { CreateUserPostRouteSwaggerDescription } from './swagger/controller/createUserPost.route.swagger';
 import { UpdateUserPostDto } from './dto/updateUserPost.dto';
 import { UpdateUserPostCommand } from './application/updateUserPost.handler';
 import { UpdateUserPostRouteSwaggerDescription } from './swagger/controller/updateUserPost.route.swagger';
+import { UserPostReturnType } from './dto/userPostReturnTypes';
 
 const picsErrorMessage = `The photo(s) must be less than or equal 0,5 Mb and have JPEG or PNG format`;
 
@@ -57,7 +55,7 @@ export class UserPostsController {
     postImages: Express.Multer.File[],
     @Body() createPostDto: CreateUserPostDto,
     @User() user: UserDecoratorType,
-  ): Promise<CreateUserPostReturnType> {
+  ): Promise<UserPostReturnType> {
     return this.commandBus.execute(
       new CreateUserPostCommand({
         userId: user.userId,
@@ -68,13 +66,13 @@ export class UserPostsController {
   }
 
   @Patch()
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @UpdateUserPostRouteSwaggerDescription()
   async updatePost(
     @Body() updatePostDto: UpdateUserPostDto,
     @User() user: UserDecoratorType,
-  ): Promise<void> {
-    await this.commandBus.execute(
+  ): Promise<UserPostReturnType> {
+    return this.commandBus.execute(
       new UpdateUserPostCommand({
         userPostId: updatePostDto.userPostId,
         userId: user.userId,
