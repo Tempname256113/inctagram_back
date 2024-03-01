@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -28,14 +29,18 @@ import { UpdateUserPostRouteSwaggerDescription } from './swagger/controller/upda
 import { UserPostReturnType } from './dto/userPostReturnTypes';
 import { DeleteUserPostCommand } from './application/deleteUserPost.handler';
 import { DeleteUserPostRouteSwaggerDescription } from './swagger/controller/deleteUserPost.route.swagger';
+import { UserPostsQueryRepository } from './repositories/userPosts.queryRepository';
 
 const picsErrorMessage = `The photo(s) must be less than or equal 0,5 Mb and have JPEG or PNG format`;
 
 @ApiTags('user-posts controller')
 @Controller('user-posts')
-// @UseGuards(AuthGuard)
+@UseGuards(AuthGuard)
 export class UserPostsController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly userPostsQueryRepository: UserPostsQueryRepository,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -95,5 +100,17 @@ export class UserPostsController {
     await this.commandBus.execute(
       new DeleteUserPostCommand({ userPostId: postId, userId: user.userId }),
     );
+  }
+
+  @Get(':page')
+  @HttpCode(HttpStatus.OK)
+  async getPosts(
+    @Param('page') page: number,
+    @User() user: UserDecoratorType,
+  ): Promise<UserPostReturnType[]> {
+    return this.userPostsQueryRepository.getPostsByUserId({
+      userId: user.userId,
+      page,
+    });
   }
 }

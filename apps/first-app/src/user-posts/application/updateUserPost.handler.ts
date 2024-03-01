@@ -49,6 +49,8 @@ export class UpdateUserPostHandler
     return {
       postId: updatedPost.id,
       postDescription: updatedPost.description,
+      createdAt: updatedPost.createdAt,
+      updatedAt: updatedPost.updatedAt,
       postImages: updatedPost.images
         .sort((a, b) => a.id - b.id)
         .map((image) => {

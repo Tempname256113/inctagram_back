@@ -40,6 +40,8 @@ export class CreateUserPostHandler
     return {
       postId: createdPost.id,
       postDescription: createdPost.description ?? null,
+      createdAt: createdPost.createdAt,
+      updatedAt: createdPost.updatedAt,
       postImages: loadedImagesForPost
         .sort((a, b) => a.id - b.id)
         .map((loadedImage) => {
