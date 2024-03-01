@@ -15,4 +15,15 @@ export class UserPostsRepository {
       include: { images: true, user: true },
     });
   }
+
+  async updatePostDescriptionByPostId(data: {
+    postId: number;
+    description: string;
+  }) {
+    return this.prisma.userPost.update({
+      where: { id: data.postId },
+      data: { description: data.description },
+      include: { images: true, user: true },
+    });
+  }
 }

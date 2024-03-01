@@ -6,7 +6,7 @@ import {
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CreateUserPostReturnType } from '../../application/createPost.handler';
+import { CreateUserPostReturnType } from '../../application/createUserPost.handler';
 
 export const CreateUserPostRouteSwaggerDescription = () => {
   return applyDecorators(

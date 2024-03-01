@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseFilePipeBuilder,
+  Patch,
   Post,
   UnprocessableEntityException,
   UploadedFiles,
@@ -12,16 +13,19 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../../../../shared/guards/auth.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { CreatePostDto } from './dto/createPostDto';
+import { CreateUserPostDto } from './dto/createUserPost.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { CommandBus } from '@nestjs/cqrs';
 import {
-  CreatePostCommand,
+  CreateUserPostCommand,
   CreateUserPostReturnType,
-} from './application/createPost.handler';
+} from './application/createUserPost.handler';
 import { User } from '../../../../shared/decorators/user.decorator';
 import { UserDecoratorType } from '../../../../shared/types/user/user.type';
 import { CreateUserPostRouteSwaggerDescription } from './swagger/controller/createUserPost.route.swagger';
+import { UpdateUserPostDto } from './dto/updateUserPost.dto';
+import { UpdateUserPostCommand } from './application/updateUserPost.handler';
+import { UpdateUserPostRouteSwaggerDescription } from './swagger/controller/updateUserPost.route.swagger';
 
 const picsErrorMessage = `The photo(s) must be less than or equal 0,5 Mb and have JPEG or PNG format`;
 
@@ -51,14 +55,30 @@ export class UserPostsController {
         }),
     )
     postImages: Express.Multer.File[],
-    @Body() createPostDto: CreatePostDto,
+    @Body() createPostDto: CreateUserPostDto,
     @User() user: UserDecoratorType,
   ): Promise<CreateUserPostReturnType> {
     return this.commandBus.execute(
-      new CreatePostCommand({
+      new CreateUserPostCommand({
         userId: user.userId,
         images: postImages,
         description: createPostDto.description,
+      }),
+    );
+  }
+
+  @Patch()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UpdateUserPostRouteSwaggerDescription()
+  async updatePost(
+    @Body() updatePostDto: UpdateUserPostDto,
+    @User() user: UserDecoratorType,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new UpdateUserPostCommand({
+        userPostId: updatePostDto.userPostId,
+        userId: user.userId,
+        description: updatePostDto.description,
       }),
     );
   }

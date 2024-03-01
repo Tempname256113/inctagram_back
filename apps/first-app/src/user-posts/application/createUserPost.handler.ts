@@ -3,7 +3,7 @@ import { FileResourceService } from '../../file-resourse/file-resource.service';
 import { UserPostsRepository } from '../repositories/userPosts.repository';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreatePostCommand {
+export class CreateUserPostCommand {
   constructor(
     public readonly data: {
       userId: number;
@@ -32,9 +32,9 @@ export class CreateUserPostReturnType {
   createdPostImages: { imageId: number; imageUrl: string }[];
 }
 
-@CommandHandler(CreatePostCommand)
-export class CreatePostHandler
-  implements ICommandHandler<CreatePostCommand, CreateUserPostReturnType>
+@CommandHandler(CreateUserPostCommand)
+export class CreateUserPostHandler
+  implements ICommandHandler<CreateUserPostCommand, CreateUserPostReturnType>
 {
   constructor(
     private readonly imageService: FileResourceService,
@@ -43,7 +43,7 @@ export class CreatePostHandler
 
   async execute({
     data: command,
-  }: CreatePostCommand): Promise<CreateUserPostReturnType> {
+  }: CreateUserPostCommand): Promise<CreateUserPostReturnType> {
     const createdPost = await this.postsRepository.createPost({
       userId: command.userId,
       description: command.description,
