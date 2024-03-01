@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpCode,
   HttpStatus,
+  Param,
   ParseFilePipeBuilder,
   Patch,
   Post,
@@ -24,6 +26,8 @@ import { UpdateUserPostDto } from './dto/updateUserPost.dto';
 import { UpdateUserPostCommand } from './application/updateUserPost.handler';
 import { UpdateUserPostRouteSwaggerDescription } from './swagger/controller/updateUserPost.route.swagger';
 import { UserPostReturnType } from './dto/userPostReturnTypes';
+import { DeleteUserPostCommand } from './application/deleteUserPost.handler';
+import { DeleteUserPostRouteSwaggerDescription } from './swagger/controller/deleteUserPost.route.swagger';
 
 const picsErrorMessage = `The photo(s) must be less than or equal 0,5 Mb and have JPEG or PNG format`;
 
@@ -78,6 +82,18 @@ export class UserPostsController {
         userId: user.userId,
         description: updatePostDto.description,
       }),
+    );
+  }
+
+  @Delete(':postId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @DeleteUserPostRouteSwaggerDescription()
+  async deletePost(
+    @Param('postId') postId: number,
+    @User() user: UserDecoratorType,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new DeleteUserPostCommand({ userPostId: postId, userId: user.userId }),
     );
   }
 }

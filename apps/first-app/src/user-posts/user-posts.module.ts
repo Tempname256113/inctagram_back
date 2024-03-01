@@ -9,8 +9,13 @@ import { FileResourseModule } from '../file-resourse/file-resource.module';
 import { UserPostsRepository } from './repositories/userPosts.repository';
 import { UpdateUserPostHandler } from './application/updateUserPost.handler';
 import { UserPostsQueryRepository } from './repositories/userPosts.queryRepository';
+import { DeleteUserPostHandler } from './application/deleteUserPost.handler';
 
-const commandHandlers = [CreateUserPostHandler, UpdateUserPostHandler];
+const commandHandlers = [
+  CreateUserPostHandler,
+  UpdateUserPostHandler,
+  DeleteUserPostHandler,
+];
 
 @Module({
   imports: [JwtModule, CqrsModule, FileResourseModule],

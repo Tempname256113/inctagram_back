@@ -26,4 +26,11 @@ export class UserPostsRepository {
       include: { images: true, user: true },
     });
   }
+
+  async deletePostById(postId: number) {
+    return this.prisma.userPost.delete({
+      where: { id: postId },
+      include: { images: true },
+    });
+  }
 }

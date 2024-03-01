@@ -156,8 +156,8 @@ model FileResource {
   createdById Int
 
   profileImage ProfileImage[]
-  postId       Int
-  userPost     UserPost       @relation(fields: [postId], references: [id])
+  postId       Int?
+  userPost     UserPost?      @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   createdBy User @relation(fields: [createdById], references: [id])
 

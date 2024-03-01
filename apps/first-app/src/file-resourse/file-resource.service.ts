@@ -94,7 +94,6 @@ export class FileResourceService {
       path,
       url,
       createdById: userId,
-      postId: null,
     });
   }
 
@@ -136,5 +135,11 @@ export class FileResourceService {
     await this.s3StorageAdapter.delete(data.imagePath);
 
     await this.fileResourceRepository.delete({ id: data.imageId });
+  }
+
+  async deleteImagesFromBucket(imagesPaths: string[]): Promise<void> {
+    await Promise.all(
+      imagesPaths.map((imagePath) => this.s3StorageAdapter.delete(imagePath)),
+    );
   }
 }
