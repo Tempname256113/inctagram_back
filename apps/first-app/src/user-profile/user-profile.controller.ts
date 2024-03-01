@@ -14,6 +14,7 @@ import { GetUserProfileRouteSwaggerDescription } from './swagger/controller/getU
 import { ApiTags } from '@nestjs/swagger';
 
 @Controller('user-profile')
+@UseGuards(AuthGuard)
 @ApiTags('user profile controller')
 export class UserProfileController {
   constructor(
@@ -22,7 +23,6 @@ export class UserProfileController {
   ) {}
 
   @GetUserProfileRouteSwaggerDescription()
-  @UseGuards(AuthGuard)
   @Get()
   async findOne(@User() user: UserDecoratorType) {
     return this.userProfileQueryRepository.getProfile(user.userId, {
@@ -31,7 +31,6 @@ export class UserProfileController {
   }
 
   @CreateUserProfileRouteSwaggerDescription()
-  @UseGuards(AuthGuard)
   @Post()
   async create(
     @User() user: UserDecoratorType,
@@ -48,7 +47,6 @@ export class UserProfileController {
   }
 
   @UpdateUserProfileRouteSwaggerDescription()
-  @UseGuards(AuthGuard)
   @Patch()
   async update(
     @User() user: UserDecoratorType,

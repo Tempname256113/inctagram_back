@@ -8,7 +8,7 @@ import {
   ParseFilePipeBuilder,
   HttpStatus,
 } from '@nestjs/common';
-import { FileResourseService } from './file-resourse.service';
+import { FileResourceService } from './file-resource.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'shared/guards/auth.guard';
 import { User } from 'shared/decorators/user.decorator';
@@ -20,7 +20,7 @@ import { CreateFileResourceRouteSwaggerDescription } from './swagger/createFileR
 @ApiTags('file-resourses controller')
 @Controller('file-resourse')
 export class FileResourseController {
-  constructor(private readonly fileResourseService: FileResourseService) {}
+  constructor(private readonly fileResourseService: FileResourceService) {}
 
   @UseGuards(AuthGuard)
   @Post('/upload')
@@ -31,20 +31,21 @@ export class FileResourseController {
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addMaxSizeValidator({
-          maxSize: 5000,
+          maxSize: 500000,
+          message: 'Pics size must have <= 500000 kb (0,5 MB)',
         })
+        .addFileTypeValidator({ fileType: '.(png|jpeg|jpg)' })
         .build({
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         }),
     )
     file: Express.Multer.File,
-
     @Body() uploadfileDto: UploadFileDto,
   ) {
     return this.fileResourseService.upload({
       userId: user.userId,
       file,
-      data: uploadfileDto,
+      imageType: uploadfileDto.type,
     });
   }
 }
