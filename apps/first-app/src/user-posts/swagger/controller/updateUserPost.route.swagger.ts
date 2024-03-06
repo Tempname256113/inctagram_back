@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -11,6 +12,7 @@ import { UserPostReturnType } from '../../dto/userPostReturnTypes';
 export const UpdateUserPostRouteSwaggerDescription = () => {
   return applyDecorators(
     ApiOperation({ summary: 'Update user post' }),
+    ApiBearerAuth(),
     ApiOkResponse({
       description: 'User post was updated',
       type: UserPostReturnType,

@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiForbiddenResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -10,6 +11,7 @@ import {
 export const DeleteUserPostRouteSwaggerDescription = () => {
   return applyDecorators(
     ApiOperation({ summary: 'Delete user post' }),
+    ApiBearerAuth(),
     ApiNoContentResponse({
       description: 'User post with provided id is deleted',
     }),

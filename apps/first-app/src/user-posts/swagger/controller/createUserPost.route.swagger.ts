@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiCreatedResponse,
@@ -12,6 +13,7 @@ export const CreateUserPostRouteSwaggerDescription = () => {
   return applyDecorators(
     ApiOperation({ summary: 'Create user post' }),
     ApiConsumes('multipart/form-data'),
+    ApiBearerAuth(),
     ApiBody({
       schema: {
         type: 'object',
