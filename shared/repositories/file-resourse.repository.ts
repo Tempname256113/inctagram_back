@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'shared/database/prisma.service';
 
 @Injectable()
-export class FileResourseRepository {
+export class FileResourceRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(

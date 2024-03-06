@@ -8,7 +8,7 @@ import { UserProfileRepository } from '../../../repositories/user-profile.reposi
 import { differenceInYears } from 'date-fns';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'shared/database/prisma.service';
-import { FileResourseService } from 'apps/first-app/src/file-resourse/file-resourse.service';
+import { FileResourceService } from 'apps/first-app/src/file-resourse/file-resource.service';
 import { ProfileImageQueryRepository } from '../../../repositories/query/profile-image-query.repository';
 import { ProfileImageRepository } from '../../../repositories/profile-image.repository';
 
@@ -35,7 +35,7 @@ export class UpdateUserProfileHandler
   constructor(
     private readonly userProfileRepository: UserProfileRepository,
     private readonly prismaService: PrismaService,
-    private readonly fileResourceService: FileResourseService,
+    private readonly fileResourceService: FileResourceService,
     private readonly profileImageQueryRepository: ProfileImageQueryRepository,
     private readonly profileImageRepository: ProfileImageRepository,
   ) {}
@@ -59,7 +59,8 @@ export class UpdateUserProfileHandler
       const profileImage = await this.getProfileImage({ userId, fileId });
 
       await this.fileResourceService.delete({
-        file: profileImage.image,
+        imagePath: profileImage.image.path,
+        imageId: profileImage.image.id,
       });
 
       await this.profileImageRepository.delete({

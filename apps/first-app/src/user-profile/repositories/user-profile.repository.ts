@@ -8,7 +8,10 @@ import { PrismaService } from 'shared/database/prisma.service';
 export class UserProfileRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createProfile(userId: number, values: CreateUserProfileDto) {
+  async createProfile(
+    userId: number,
+    values: Omit<CreateUserProfileDto, 'userId'>,
+  ) {
     return this.prismaService.userProfile
       .create({
         data: {

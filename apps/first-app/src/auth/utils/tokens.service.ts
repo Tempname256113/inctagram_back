@@ -135,7 +135,7 @@ export class TokensService {
 
   async verifyAccessToken(
     accessToken: string,
-  ): Promise<AccessTokenPayloadType> {
+  ): Promise<AccessTokenPayloadType | null> {
     try {
       const accessTokenPayload = await this.jwtService.verifyAsync(
         accessToken,
