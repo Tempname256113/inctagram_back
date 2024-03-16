@@ -32,18 +32,18 @@ export class CreateUserProfileHandler
 
     this.checkAge(dateOfBirth);
 
-    await this.fileResourceService.canManageFileResource({
-      userId,
-      fileId,
-      type: FileResourceTypes.profilePhoto,
-    });
-
     const profile = await this.userProfileRepository.createProfile(userId, {
       dateOfBirth,
       ...values,
     });
 
     if (fileId) {
+      await this.fileResourceService.canManageFileResource({
+        userId,
+        fileId,
+        type: FileResourceTypes.profilePhoto,
+      });
+
       await this.profileImageRepository.create({
         profileId: userId,
         imageId: fileId,
