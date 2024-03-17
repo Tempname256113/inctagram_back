@@ -38,7 +38,9 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
       user.id,
     );
 
-    res.status(HttpStatus.OK).send({ accessToken });
+    res
+      .status(HttpStatus.OK)
+      .send({ accessToken, userId: user.id, username: user.username });
   }
 
   async getUser(userLoginDTO: LoginDTO) {
