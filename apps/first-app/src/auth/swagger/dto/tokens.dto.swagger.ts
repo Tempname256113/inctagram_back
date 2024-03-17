@@ -7,4 +7,10 @@ export class AccessTokenResponseDtoSwagger {
     type: 'string',
   })
   accessToken: string;
+
+  @ApiProperty({ example: 33, type: 'number' })
+  userId: number;
+
+  @ApiProperty({ example: 'temp256113', type: 'string' })
+  username: string;
 }

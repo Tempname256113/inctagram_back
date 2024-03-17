@@ -10,7 +10,11 @@ import { NodemailerService } from '../../utils/nodemailer.service';
 import { Response as Res } from 'express';
 import axios from 'axios';
 import { Providers } from '@prisma/client';
-import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
+import {
+  CreateUserType,
+  SideAuthCommonFunctions,
+} from './common/sideAuth.commonFunctions';
+import { RefreshTokenPayloadType } from '../../types/tokens.models';
 
 export class GoogleAuthCommand {
   constructor(
@@ -39,7 +43,6 @@ export class GoogleAuthHandler
       userQueryRepository,
       userRepository,
       tokensService,
-      nodemailerService,
     });
   }
 
@@ -50,26 +53,46 @@ export class GoogleAuthHandler
 
     const userInfoFromGoogle = await this.getUserInfoFromGoogle(googleCode);
 
-    const userFromDB = await this.getUserFromDB({
+    const userCreateData: CreateUserType = {
+      userEmail: userInfoFromGoogle.userEmail,
       username: userInfoFromGoogle.username,
+      provider: Providers.Google,
+    };
+
+    const userFromDB = await this.getUserFromDB({
       userEmail: userInfoFromGoogle.userEmail,
       provider: Providers.Google,
     });
+
+    let user;
+
+    if (userFromDB) {
+      user = userFromDB;
+    } else {
+      user = await this.createUser(userCreateData);
+
+      await this.nodemailerService.sendRegistrationSuccessfulMessage(
+        user.email,
+      );
+    }
+
+    const providedRefreshTokenPayload: RefreshTokenPayloadType =
+      this.dependencies.tokensService.getTokenPayload(refreshToken);
 
     // если использует клиент роут для логина через сторонние апи
     // надо проверить есть у него уже рефреш токен или нет
     // если есть то не надо создавать новую сессию чтобы засорять базу
     // надо обновить существующую сессию
-    if (refreshToken) {
+    if (providedRefreshTokenPayload) {
       await this.updateUserSession({ refreshToken, res });
     } else {
       await this.createUserSession({ userId: userFromDB.id, res });
     }
 
     return {
-      userId: userFromDB.id,
-      username: userFromDB.username,
-      accessToken: await this.tokensService.createAccessToken(userFromDB.id),
+      userId: user.id,
+      username: user.username,
+      accessToken: await this.tokensService.createAccessToken(user.id),
     };
   }
 
@@ -88,7 +111,7 @@ export class GoogleAuthHandler
       id_token: string;
     } = await axios({
       method: 'post',
-      url: `https://oauth2.googleapis.com/token?grant_type=authorization_code&code=${googleCode}&redirect_uri=${frontendUrl}&client_id=${clientId}&client_secret=${clientSecret}`,
+      url: `https://oauth2.googleapis.com/token?grant_type=authorization_code&code=${googleCode}&redirect_uri=${frontendUrl}/auth/sign-in&client_id=${clientId}&client_secret=${clientSecret}`,
       headers: { Accept: 'application/json' },
     })
       .then((res) => res.data)

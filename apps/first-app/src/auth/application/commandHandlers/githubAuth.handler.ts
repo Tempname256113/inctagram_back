@@ -9,8 +9,12 @@ import { TokensService } from '../../utils/tokens.service';
 import { NodemailerService } from '../../utils/nodemailer.service';
 import axios from 'axios';
 import { Response } from 'express';
-import { SideAuthCommonFunctions } from './common/sideAuth.commonFunctions';
+import {
+  CreateUserType,
+  SideAuthCommonFunctions,
+} from './common/sideAuth.commonFunctions';
 import { SideAuthResponseType } from '../../dto/response/sideAuth.responseType';
+import { RefreshTokenPayloadType } from '../../types/tokens.models';
 
 export class GithubAuthCommand {
   constructor(
@@ -38,7 +42,6 @@ export class GithubAuthHandler
     super({
       userQueryRepository,
       userRepository,
-      nodemailerService,
       tokensService,
     });
   }
@@ -50,26 +53,46 @@ export class GithubAuthHandler
 
     const userInfoFromGithub = await this.getUserInfoFromGithub(githubCode);
 
-    const userFromDB = await this.getUserFromDB({
+    const userCreateData: CreateUserType = {
       userEmail: userInfoFromGithub.userEmail,
       username: userInfoFromGithub.username,
       provider: Providers.Github,
+    };
+
+    const userFromDB = await this.getUserFromDB({
+      userEmail: userCreateData.userEmail,
+      provider: userCreateData.provider,
     });
+
+    let user;
+
+    if (userFromDB) {
+      user = userFromDB;
+    } else {
+      user = await this.createUser(userCreateData);
+
+      await this.nodemailerService.sendRegistrationSuccessfulMessage(
+        user.email,
+      );
+    }
+
+    const providedRefreshTokenPayload: RefreshTokenPayloadType =
+      this.dependencies.tokensService.getTokenPayload(refreshToken);
 
     // если использует клиент роут для логина через сторонние апи
     // надо проверить есть у него уже рефреш токен или нет
     // если есть то не надо создавать новую сессию чтобы засорять базу
     // надо обновить существующую сессию
-    if (refreshToken) {
+    if (providedRefreshTokenPayload) {
       await this.updateUserSession({ refreshToken, res });
     } else {
       await this.createUserSession({ userId: userFromDB.id, res });
     }
 
     return {
-      userId: userFromDB.id,
-      username: userFromDB.username,
-      accessToken: await this.tokensService.createAccessToken(userFromDB.id),
+      userId: user.id,
+      username: user.username,
+      accessToken: await this.tokensService.createAccessToken(user.id),
     };
   }
 

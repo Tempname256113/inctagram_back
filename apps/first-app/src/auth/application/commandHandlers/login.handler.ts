@@ -2,7 +2,6 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { LoginDTO } from '../../dto/login.dto';
 import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { BcryptService } from '../../utils/bcrypt.service';
-import { USER_ERRORS } from '../../variables/validationErrors.messages';
 import { Response } from 'express';
 import { UserQueryRepository } from '../../repositories/query/user.queryRepository';
 import { TokensService } from '../../utils/tokens.service';
@@ -39,7 +38,9 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
       user.id,
     );
 
-    res.status(HttpStatus.OK).send({ accessToken });
+    res
+      .status(HttpStatus.OK)
+      .send({ accessToken, userId: user.id, username: user.username });
   }
 
   async getUser(userLoginDTO: LoginDTO) {
@@ -47,8 +48,11 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
       userLoginDTO.email,
     );
 
+    const errorDescription =
+      'The email or password are incorrect. Try again please';
+
     if (!foundUser) {
-      throw new UnauthorizedException(USER_ERRORS.EMAIL_OR_PASSWORD_INCORRECT);
+      throw new UnauthorizedException(errorDescription);
     }
 
     const passwordIsCorrect: boolean =
@@ -58,7 +62,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand, void> {
       });
 
     if (!passwordIsCorrect) {
-      throw new UnauthorizedException(USER_ERRORS.EMAIL_OR_PASSWORD_INCORRECT);
+      throw new UnauthorizedException(errorDescription);
     }
 
     return foundUser;

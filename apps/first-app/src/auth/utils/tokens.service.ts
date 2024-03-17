@@ -132,4 +132,22 @@ export class TokensService {
       return null;
     }
   }
+
+  async verifyAccessToken(
+    accessToken: string,
+  ): Promise<AccessTokenPayloadType | null> {
+    try {
+      const accessTokenPayload = await this.jwtService.verifyAsync(
+        accessToken,
+        {
+          secret: this.accessTokenSecret,
+          ignoreExpiration: false,
+        },
+      );
+
+      return accessTokenPayload;
+    } catch (err) {
+      return null;
+    }
+  }
 }

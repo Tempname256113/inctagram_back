@@ -5,7 +5,6 @@ import { UserQueryRepository } from '../../../repositories/query/user.queryRepos
 import { NodemailerService } from '../../../utils/nodemailer.service';
 import { UserChangePasswordRequestStates } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
-import { USER_ERRORS } from '../../../variables/validationErrors.messages';
 import { UserRepository } from '../../../repositories/user.repository';
 import { RecaptchaService } from '../../../utils/recaptcha.service';
 import { PasswordRecoveryRequestDTO } from '../../../dto/passwordRecovery.dto';
@@ -35,7 +34,7 @@ export class PasswordRecoveryRequestHandler
     const foundUser = await this.userQueryRepository.getUserByEmail(email);
 
     if (!foundUser) {
-      throw new NotFoundException(USER_ERRORS.NOT_FOUND);
+      throw new NotFoundException('User not found');
     }
 
     // при сбросе пароля надо сбросить пароль и сбросить активные сессии
